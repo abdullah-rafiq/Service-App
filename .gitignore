@@ -1,0 +1,136 @@
+# ---------------------------
+# Miscellaneous
+# ---------------------------
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# ---------------------------
+# IDE / Editor
+# ---------------------------
+# Android Studio / IntelliJ
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VS Code settings (optional, uncomment if needed)
+#.vscode/
+.dart_tool/
+.idea/
+build/
+/build/
+
+
+# ---------------------------
+# Flutter / Dart / Pub
+# ---------------------------
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+analysis_options.yaml
+.pub-cache/
+.pub/
+build/
+coverage/
+/build/
+**/build/
+firebase_options.dart
+lib/firebase_options.dart
+assets
+# ---------------------------
+# Generated build artifacts
+# ---------------------------
+# Android
+android
+/android/app/build/
+/android/.gradle/
+/android/captures/
+/android/local.properties
+
+# iOS
+ios
+ios/Flutter/Flutter.framework/
+ios/Flutter/Flutter.podspec
+ios/Pods/
+ios/.symlinks/
+ios/Runner/GeneratedPluginRegistrant.*
+ios/Flutter/.last_build_id
+
+# macOS
+macos/Flutter/Flutter.framework/
+macos/Pods/
+macos/.symlinks/
+macos/Runner/GeneratedPluginRegistrant.*
+
+# Linux
+linux
+linux/flutter/ephemeral/
+
+# Windows
+windows/flutter/ephemeral/
+
+# Web
+web
+web/manifest.json
+web/favicon.png
+
+# ---------------------------
+# Firebase files
+# ---------------------------
+lib/firebase_options.dart
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+macos/Runner/GoogleService-Info.plist
+firebase.json
+flutter_application_1.iml
+windows/
+/windows/
+/macOS/
+
+
+# ---------------------------
+# Environment / Config
+# ---------------------------
+.env
+.env.*
+*.env
+key.properties
+
+# ---------------------------
+# Android signing / keystore
+# ---------------------------
+android/app/*.keystore
+android/app/*.jks
+
+# ---------------------------
+# iOS/macOS certificates / keys
+# ---------------------------
+*.p12
+*.pem
+
+# ---------------------------
+# Others
+# ---------------------------
+app.*.symbols
+app.*.map.json
+
+#read me
+README.md
+
+.metadata
+
+pubspec.lock
+pubspec.yaml

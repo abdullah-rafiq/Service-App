@@ -1,0 +1,126 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_application_1/models/booking.dart';
+import 'package:flutter_application_1/services/booking_service.dart';
+
+class PaymentPage extends StatelessWidget {
+  final BookingModel booking;
+
+  const PaymentPage({super.key, required this.booking});
+
+  @override
+  Widget build(BuildContext context) {
+    Future<void> _handlePayment(String method) async {
+      await BookingService.instance
+          .updatePaymentStatus(booking.id, PaymentStatus.paid);
+
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Marked as paid via $method'),
+        ),
+      );
+
+      Navigator.of(context).pop();
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+        title: const Text('Payment'),
+      ),
+      backgroundColor: const Color(0xFFF6FBFF),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x14000000),
+                  blurRadius: 12,
+                  offset: Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Pay for booking',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Amount: PKR ${booking.price.toStringAsFixed(0)}',
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Current status: ${booking.paymentStatus}',
+                  style:
+                      const TextStyle(fontSize: 14, color: Colors.black54),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.account_balance_wallet_outlined,
+                  color: Colors.deepPurple),
+              title: const Text('JazzCash'),
+              subtitle: const Text('Pay using your JazzCash mobile wallet.'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                _handlePayment('JazzCash');
+              },
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.account_balance_wallet,
+                  color: Colors.green),
+              title: const Text('Easypaisa'),
+              subtitle: const Text('Pay using your Easypaisa mobile wallet.'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                _handlePayment('Easypaisa');
+              },
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.credit_card, color: Colors.blue),
+              title: const Text('Debit / Credit Card'),
+              subtitle: const Text('Pay with Visa, Mastercard or other cards.'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                _handlePayment('Card / Bank');
+              },
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'Note: This is a demo payment screen. Connect these methods to real '
+            'payment gateways for production use.',
+            style: TextStyle(fontSize: 13, color: Colors.black54),
+          ),
+        ],
+      ),
+    );
+  }
+}

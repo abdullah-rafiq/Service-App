@@ -1,0 +1,232 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+
+import 'package:flutter_application_1/models/booking.dart';
+import 'package:flutter_application_1/models/service.dart';
+import 'package:flutter_application_1/services/booking_service.dart';
+
+class ServiceDetailPage extends StatefulWidget {
+  final ServiceModel service;
+
+  const ServiceDetailPage({super.key, required this.service});
+
+  @override
+  State<ServiceDetailPage> createState() => _ServiceDetailPageState();
+}
+
+class _ServiceDetailPageState extends State<ServiceDetailPage> {
+  DateTime? _selectedDateTime;
+  bool _submitting = false;
+
+  Future<void> _pickDateTime() async {
+    final now = DateTime.now();
+    final date = await showDatePicker(
+      context: context,
+      initialDate: now,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 30)),
+    );
+    if (date == null) return;
+
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(now.add(const Duration(hours: 1))),
+    );
+    if (time == null) return;
+
+    setState(() {
+      _selectedDateTime = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
+    });
+  }
+
+  Future<void> _confirmBooking() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please log in again to book a service.')),
+      );
+      return;
+    }
+
+    if (_selectedDateTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select date and time.')),
+      );
+      return;
+    }
+
+    setState(() {
+      _submitting = true;
+    });
+
+    try {
+      final booking = BookingModel(
+        id: '',
+        serviceId: widget.service.id,
+        customerId: user.uid,
+        scheduledTime: _selectedDateTime,
+        createdAt: DateTime.now(),
+        price: widget.service.basePrice,
+      );
+
+      await BookingService.instance.createBooking(booking);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Booking created successfully.')),
+      );
+      Navigator.of(context).pop();
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not create booking. Try again.')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _submitting = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final service = widget.service;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(service.name),
+      ),
+      backgroundColor: const Color(0xFFF6FBFF),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x14000000),
+                    blurRadius: 12,
+                    offset: Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.blue.shade50,
+                        ),
+                        child: const Icon(
+                          Icons.cleaning_services_rounded,
+                          size: 32,
+                          color: Colors.blueAccent,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              service.name,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'Home service',
+                              style: TextStyle(color: Colors.black54),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Starting from PKR ${service.basePrice.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.blueAccent,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Select date & time',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    onPressed: _pickDateTime,
+                    icon: const Icon(Icons.calendar_today_outlined),
+                    label: Text(
+                      _selectedDateTime == null
+                          ? 'Choose date and time'
+                          : _selectedDateTime.toString(),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Notes (optional)',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'You can add more fields later (address selection, notes, etc.)',
+                    style: TextStyle(color: Colors.black54, fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+            const Spacer(),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _submitting ? null : _confirmBooking,
+                style: ElevatedButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                ),
+                child: _submitting
+                    ? const SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Confirm Booking'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
