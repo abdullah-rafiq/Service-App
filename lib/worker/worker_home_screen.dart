@@ -3,7 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:flutter_application_1/models/app_user.dart';
 import 'package:flutter_application_1/services/user_service.dart';
-import 'package:flutter_application_1/user/profile_page.dart';
+import 'package:flutter_application_1/common/profile_page.dart';
+import 'package:flutter_application_1/localized_strings.dart';
 import 'worker_jobs_page.dart';
 import 'worker_earnings_page.dart';
 
@@ -13,38 +14,30 @@ class WorkerHomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-        title: const Text('Worker home'),
-      ),
-      backgroundColor: const Color(0xFFF6FBFF),
-      body: Padding(
+        body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _WorkerVerificationBanner(),
             const SizedBox(height: 12),
-            const Text(
-              'Today\'s overview',
-              style: TextStyle(
+            Text(
+              L10n.workerTodayOverviewTitle(),
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
               ),
             ),
+
             const SizedBox(height: 4),
-            const Text(
-              'Manage your incoming requests and track your earnings.',
-              style: TextStyle(
+            Text(
+              L10n.workerTodayOverviewSubtitle(),
+              style: const TextStyle(
                 fontSize: 13,
                 color: Colors.black54,
               ),
             ),
+
             const SizedBox(height: 20),
             GestureDetector(
               onTap: () {
@@ -82,21 +75,21 @@ class WorkerHomeScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Incoming requests',
-                            style: TextStyle(
+                            L10n.workerIncomingRequestsTitle(),
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          SizedBox(height: 6),
+                          const SizedBox(height: 6),
                           Text(
-                            'Tap to view a demo job detail. In the future this will show real-time bookings assigned to you.',
-                            style: TextStyle(
+                            L10n.workerIncomingRequestsSubtitle(),
+                            style: const TextStyle(
                               color: Colors.black54,
                               fontSize: 13,
                             ),
@@ -145,21 +138,21 @@ class WorkerHomeScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'My jobs & earnings',
-                            style: TextStyle(
+                            L10n.workerMyJobsEarningsTitle(),
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          SizedBox(height: 6),
+                          const SizedBox(height: 6),
                           Text(
-                            'Tap to view a demo earnings summary. Later this will include completed jobs and payout history.',
-                            style: TextStyle(
+                            L10n.workerMyJobsEarningsSubtitle(),
+                            style: const TextStyle(
                               color: Colors.black54,
                               fontSize: 13,
                             ),

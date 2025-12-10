@@ -83,8 +83,10 @@ class _AuthScreenState extends State<AuthScreen> {
           context.go('/worker');
           break;
         case UserRole.admin:
+          context.go('/admin');
+          break;
         default:
-          context.go('/role');
+          context.go('/home');
       }
     } on FirebaseAuthException catch (e) {
       String message = 'Login failed';
@@ -152,8 +154,10 @@ class _AuthScreenState extends State<AuthScreen> {
           context.go('/worker');
           break;
         case UserRole.admin:
+          context.go('/admin');
+          break;
         default:
-          context.go('/role');
+          context.go('/home');
       }
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

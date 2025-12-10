@@ -3,7 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:flutter_application_1/user/messages_page.dart';
-import 'package:flutter_application_1/user/profile_page.dart';
+import 'package:flutter_application_1/common/profile_page.dart';
+import 'package:flutter_application_1/common/app_bottom_nav.dart';
+import 'package:flutter_application_1/localized_strings.dart';
 import 'worker_home_screen.dart';
 import 'worker_jobs_page.dart';
 import 'worker_earnings_page.dart';
@@ -34,9 +36,8 @@ class _WorkerMainPageState extends State<WorkerMainPage> {
         index: _currentIndex,
         children: pages,
       ),
-      bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: AppBottomNav(
         currentIndex: _currentIndex,
-        type: BottomNavigationBarType.fixed,
         onTap: (index) {
           setState(() {
             _currentIndex = index;
@@ -44,24 +45,24 @@ class _WorkerMainPageState extends State<WorkerMainPage> {
         },
         items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Home',
+            icon: const Icon(Icons.home_outlined),
+            label: L10n.workerNavHome(),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.work_outline),
-            label: 'Jobs',
+            icon: const Icon(Icons.work_outline),
+            label: L10n.workerNavJobs(),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.account_balance_wallet_outlined),
-            label: 'Earnings',
+            icon: const Icon(Icons.account_balance_wallet_outlined),
+            label: L10n.workerNavEarnings(),
           ),
           BottomNavigationBarItem(
             icon: _WorkerMessagesIconWithBadge(),
-            label: 'Messages',
+            label: L10n.workerNavMessages(),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Profile',
+            icon: const Icon(Icons.person_outline),
+            label: L10n.workerNavProfile(),
           ),
         ],
       ),

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'admin_workers_page.dart';
 import 'admin_notifications_page.dart';
-import 'admin_profile_page.dart';
+import 'package:flutter_application_1/common/profile_page.dart';
+import 'package:flutter_application_1/common/app_bottom_nav.dart';
 
 class AdminMainPage extends StatefulWidget {
   const AdminMainPage({super.key});
@@ -19,7 +20,7 @@ class _AdminMainPageState extends State<AdminMainPage> {
     final pages = <Widget>[
       const AdminWorkersPage(),
       const AdminNotificationsPage(),
-      const AdminProfilePage(),
+      const ProfilePage(),
     ];
 
     return Scaffold(
@@ -28,9 +29,8 @@ class _AdminMainPageState extends State<AdminMainPage> {
         index: _currentIndex,
         children: pages,
       ),
-      bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: AppBottomNav(
         currentIndex: _currentIndex,
-        type: BottomNavigationBarType.fixed,
         onTap: (index) {
           setState(() {
             _currentIndex = index;

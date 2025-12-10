@@ -11,15 +11,15 @@ import 'package:flutter_application_1/models/app_user.dart';
 import 'package:flutter_application_1/services/user_service.dart';
 import 'package:flutter_application_1/worker/worker_verification_page.dart';
 
-import 'wallet_page.dart';
-import 'my_bookings_page.dart';
+import '../user/wallet_page.dart';
+import '../user/my_bookings_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    const Color yellow = Color(0xFFFFC107);
+    const Color accentBlue = Color(0xFF29B6F6);
     final current = FirebaseAuth.instance.currentUser;
 
     if (current == null) {
@@ -160,7 +160,7 @@ class ProfilePage extends StatelessWidget {
                                   size: 16,
                                   color: profile.verified
                                       ? Colors.green
-                                      : Colors.orange,
+                                      : Colors.red,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
@@ -171,81 +171,83 @@ class ProfilePage extends StatelessWidget {
                                     fontSize: 13,
                                     color: profile.verified
                                         ? Colors.green
-                                        : Colors.orange,
+                                        : Colors.red,
                                   ),
                                 ),
                               ],
                             ),
                           ),
                           const SizedBox(height: 4),
-                          Text(
-                            'Wallet: PKR ${profile.walletBalance.toStringAsFixed(0)}',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: Colors.black87,
+                          if (profile.role != UserRole.admin)
+                            Text(
+                              'Wallet: PKR ${profile.walletBalance.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Colors.black87,
+                              ),
                             ),
-                          ),
                         ],
                       ],
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(18),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x14000000),
-                          blurRadius: 12,
-                          offset: Offset(0, 8),
-                        ),
-                      ],
+                  if (profile == null || profile.role != UserRole.admin)
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x14000000),
+                            blurRadius: 12,
+                            offset: Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: <Widget>[
+                          _QuickAction(
+                            iconPath: 'assets/icons/wallet.png',
+                            label: 'Wallet',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                    builder: (_) => const WalletPage()),
+                              );
+                            },
+                          ),
+                          _QuickAction(
+                            iconPath: 'assets/icons/booking.png',
+                            label: 'Booking',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                    builder: (_) => const MyBookingsPage()),
+                              );
+                            },
+                          ),
+                          _QuickAction(
+                            iconPath: 'assets/icons/card.png',
+                            label: 'Payment',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                    builder: (_) => const MyBookingsPage()),
+                              );
+                            },
+                          ),
+                          _QuickAction(
+                            iconPath: 'assets/icons/contact-us.png',
+                            label: 'Support',
+                            onTap: () {
+                              context.push('/contact');
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: <Widget>[
-                        _QuickAction(
-                          iconPath: 'assets/icons/wallet.png',
-                          label: 'Wallet',
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                  builder: (_) => const WalletPage()),
-                            );
-                          },
-                        ),
-                        _QuickAction(
-                          iconPath: 'assets/icons/booking.png',
-                          label: 'Booking',
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                  builder: (_) => const MyBookingsPage()),
-                            );
-                          },
-                        ),
-                        _QuickAction(
-                          iconPath: 'assets/icons/card.png',
-                          label: 'Payment',
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                  builder: (_) => const MyBookingsPage()),
-                            );
-                          },
-                        ),
-                        _QuickAction(
-                          iconPath: 'assets/icons/contact-us.png',
-                          label: 'Support',
-                          onTap: () {
-                            context.push('/contact');
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
                   const SizedBox(height: 16),
                   if (profile != null) ...[
                     ListTile(
@@ -257,7 +259,7 @@ class ProfilePage extends StatelessWidget {
                       ),
                       leading: const Icon(Icons.person_outline),
                       trailing:
-                          const Icon(Icons.chevron_right, color: yellow),
+                          const Icon(Icons.chevron_right, color: accentBlue),
                       onTap: () => _showEditProfileDialog(context, profile),
                     ),
                     const Divider(),
@@ -273,7 +275,8 @@ class ProfilePage extends StatelessWidget {
                       cacheHeight: 125,
                       fit: BoxFit.scaleDown,
                     ),
-                    trailing: const Icon(Icons.chevron_right, color: yellow),
+                    trailing:
+                        const Icon(Icons.chevron_right, color: accentBlue),
                     onTap: () {
                       context.push('/settings');
                     },
@@ -284,7 +287,8 @@ class ProfilePage extends StatelessWidget {
                     subtitle: const Text('Help center and legal support'),
                     leading: Image.asset('assets/icons/support.png',cacheWidth: 125,  
                       cacheHeight: 125,),
-                    trailing: const Icon(Icons.chevron_right, color: yellow),
+                    trailing:
+                        const Icon(Icons.chevron_right, color: accentBlue),
                     onTap: () {
                       context.push('/contact');
                     },
@@ -295,7 +299,8 @@ class ProfilePage extends StatelessWidget {
                     subtitle: const Text('Questions and Answers'),
                     leading: Image.asset('assets/icons/faq.png',cacheWidth: 125,  
                       cacheHeight: 125,),
-                    trailing: const Icon(Icons.chevron_right, color: yellow),
+                    trailing:
+                        const Icon(Icons.chevron_right, color: accentBlue),
                     onTap: () {
                       context.push('/faq');
                     },
@@ -305,7 +310,8 @@ class ProfilePage extends StatelessWidget {
                     title: const Text('Logout'),
                     subtitle: const Text('Sign out from this account'),
                     leading: const Icon(Icons.logout),
-                    trailing: const Icon(Icons.chevron_right, color: yellow),
+                    trailing:
+                        const Icon(Icons.chevron_right, color: accentBlue),
                     onTap: () async {
                       await FirebaseAuth.instance.signOut();
                       if (context.mounted) {
@@ -433,6 +439,133 @@ Future<void> _showEditProfileDialog(BuildContext context, AppUser profile) async
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.lock_reset),
+              title: const Text('Change password'),
+              subtitle: const Text('Send a password reset link to your email.'),
+              onTap: () async {
+                final user = FirebaseAuth.instance.currentUser;
+                final email = user?.email;
+
+                if (email == null || email.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'No email found for this account. You may be using a social login.',
+                      ),
+                    ),
+                  );
+                  return;
+                }
+
+                try {
+                  await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Password reset email sent. Please check your inbox.',
+                      ),
+                    ),
+                  );
+                } catch (e) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Could not send reset email: $e',
+                      ),
+                    ),
+                  );
+                }
+              },
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(
+                Icons.delete_outline,
+                color: Colors.redAccent,
+              ),
+              title: const Text('Delete account'),
+              subtitle: const Text('Permanently remove your account and data.'),
+              onTap: () async {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: const Text('Delete account'),
+                      content: const Text(
+                        'This will permanently delete your account and data. This action cannot be undone.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.redAccent,
+                          ),
+                          child: const Text('Delete'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+
+                if (confirm != true) return;
+
+                final user = FirebaseAuth.instance.currentUser;
+                if (user == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('You must be logged in to delete account.'),
+                    ),
+                  );
+                  return;
+                }
+
+                try {
+                  final uid = user.uid;
+                  await FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(uid)
+                      .delete();
+
+                  await user.delete();
+
+                  if (!context.mounted) return;
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop();
+                } on FirebaseAuthException catch (e) {
+                  if (!context.mounted) return;
+                  if (e.code == 'requires-recent-login') {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Please log in again and then try deleting your account.',
+                        ),
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Could not delete account: ${e.code}'),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Could not delete account: $e'),
+                    ),
+                  );
+                }
+              },
             ),
           ],
         ),

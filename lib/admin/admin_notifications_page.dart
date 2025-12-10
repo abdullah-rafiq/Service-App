@@ -8,6 +8,9 @@ class AdminNotificationsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color(0xFF29B6F6),
+        foregroundColor: Colors.white,
+        elevation: 4,
         title: const Text('Notifications'),
       ),
       backgroundColor: const Color(0xFFF6FBFF),
@@ -84,7 +87,7 @@ class AdminNotificationsPage extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(icon, color: Colors.blueAccent),
+                    Icon(icon, color: const Color(0xFF29B6F6)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Column(

@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_application_1/models/app_user.dart';
+import 'package:flutter_application_1/models/review.dart';
+import 'package:flutter_application_1/services/worker_ranking_service.dart';
 import 'package:flutter_application_1/admin/admin_worker_detail_page.dart';
 
 class AdminWorkersPage extends StatelessWidget {
@@ -49,6 +51,9 @@ class AdminWorkersPage extends StatelessWidget {
 
         return Scaffold(
           appBar: AppBar(
+            backgroundColor: const Color(0xFF29B6F6),
+            foregroundColor: Colors.white,
+            elevation: 4,
             title: const Text('All workers'),
           ),
           backgroundColor: const Color(0xFFF6FBFF),
@@ -76,147 +81,205 @@ class AdminWorkersPage extends StatelessWidget {
                 );
               }
 
-              return ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: docs.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final doc = docs[index];
-                  final worker = AppUser.fromMap(doc.id, doc.data());
-
-                  final name = (worker.name?.trim().isNotEmpty ?? false)
-                      ? worker.name!.trim()
-                      : 'Worker';
-
-                  final verificationStatus =
-                      doc.data()['verificationStatus'] as String? ?? 'none';
-
-                  Color statusColor;
-                  String statusLabel;
-                  switch (verificationStatus) {
-                    case 'approved':
-                      statusColor = Colors.green;
-                      statusLabel = 'Approved';
-                      break;
-                    case 'pending':
-                      statusColor = Colors.orange;
-                      statusLabel = 'Pending';
-                      break;
-                    case 'rejected':
-                      statusColor = Colors.redAccent;
-                      statusLabel = 'Rejected';
-                      break;
-                    default:
-                      statusColor = Colors.blueGrey;
-                      statusLabel = 'Not submitted';
+              return FutureBuilder<List<_WorkerWithScore>>(
+                future: _loadWorkersWithScore(docs),
+                builder: (context, scoreSnap) {
+                  if (scoreSnap.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
                   }
 
-                  return InkWell(
-                    borderRadius: BorderRadius.circular(16),
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => AdminWorkerDetailPage(worker: worker),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
+                  if (scoreSnap.hasError) {
+                    return Center(
+                      child: Text('Error loading ratings: ${scoreSnap.error}'),
+                    );
+                  }
+
+                  final items = scoreSnap.data ?? [];
+
+                  if (items.isEmpty) {
+                    return const Center(
+                      child: Text('No workers found.'),
+                    );
+                  }
+
+                  return ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: items.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      final worker = item.user;
+                      final doc = item.doc;
+
+                      final name = (worker.name?.trim().isNotEmpty ?? false)
+                          ? worker.name!.trim()
+                          : 'Worker';
+
+                      final verificationStatus =
+                          doc.data()['verificationStatus'] as String? ?? 'none';
+
+                      Color statusColor;
+                      String statusLabel;
+                      switch (verificationStatus) {
+                        case 'approved':
+                          statusColor = Colors.green;
+                          statusLabel = 'Approved';
+                          break;
+                        case 'pending':
+                          statusColor = Colors.orange;
+                          statusLabel = 'Pending';
+                          break;
+                        case 'rejected':
+                          statusColor = Colors.redAccent;
+                          statusLabel = 'Rejected';
+                          break;
+                        default:
+                          statusColor = Colors.blueGrey;
+                          statusLabel = 'Not submitted';
+                      }
+
+                      return InkWell(
                         borderRadius: BorderRadius.circular(16),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x14000000),
-                            blurRadius: 8,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  name,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: statusColor.withOpacity(0.12),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  statusLabel,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: statusColor,
-                                  ),
-                                ),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => AdminWorkerDetailPage(worker: worker),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x14000000),
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'ID: ${worker.id}',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: Colors.black54,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Phone: ${worker.phone ?? '-'}',
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Status: ${worker.status}',
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                          const SizedBox(height: 12),
-                          if (verificationStatus == 'pending')
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: OutlinedButton.icon(
-                                    icon: const Icon(
-                                      Icons.close,
-                                      color: Colors.red,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      name,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
-                                    label: const Text('Reject'),
-                                    onPressed: () async {
-                                      await _rejectWorker(context, worker.id);
-                                    },
                                   ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: ElevatedButton.icon(
-                                    icon: const Icon(Icons.check),
-                                    label: const Text('Approve'),
-                                    onPressed: () async {
-                                      await _approveWorker(context, worker.id);
-                                    },
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: statusColor.withOpacity(0.12),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      statusLabel,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: statusColor,
+                                      ),
+                                    ),
                                   ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  const Icon(Icons.star, color: Colors.amber, size: 16),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    item.avgRating.toStringAsFixed(1),
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '(${item.reviewCount} reviews)',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.black54,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'ID: ${worker.id}',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.black54,
                                 ),
-                              ],
-                            ),
-                        ],
-                      ),
-                    ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Phone: ${worker.phone ?? '-'}',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Status: ${worker.status}',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              const SizedBox(height: 12),
+                              if (verificationStatus == 'pending')
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: OutlinedButton.icon(
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: Colors.redAccent,
+                                          side: const BorderSide(
+                                            color: Colors.redAccent,
+                                          ),
+                                        ),
+                                        icon: const Icon(
+                                          Icons.close,
+                                          color: Colors.redAccent,
+                                        ),
+                                        label: const Text('Reject'),
+                                        onPressed: () async {
+                                          await _rejectWorker(context, worker.id);
+                                        },
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: ElevatedButton.icon(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor:
+                                              const Color(0xFF29B6F6),
+                                          foregroundColor: Colors.white,
+                                          elevation: 2,
+                                        ),
+                                        icon: const Icon(Icons.check),
+                                        label: const Text('Approve'),
+                                        onPressed: () async {
+                                          await _approveWorker(context, worker.id);
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   );
                 },
               );
@@ -226,6 +289,64 @@ class AdminWorkersPage extends StatelessWidget {
       },
     );
   }
+}
+
+class _WorkerWithScore {
+  final AppUser user;
+  final QueryDocumentSnapshot<Map<String, dynamic>> doc;
+  final double score;
+  final double avgRating;
+  final int reviewCount;
+
+  _WorkerWithScore({
+    required this.user,
+    required this.doc,
+    required this.score,
+    required this.avgRating,
+    required this.reviewCount,
+  });
+}
+
+Future<List<_WorkerWithScore>> _loadWorkersWithScore(
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+) async {
+  final now = DateTime.now();
+
+  final futures = docs.map((doc) async {
+    final user = AppUser.fromMap(doc.id, doc.data());
+
+    final reviewsSnap = await FirebaseFirestore.instance
+        .collection('reviews')
+        .where('providerId', isEqualTo: user.id)
+        .get();
+
+    final reviews = reviewsSnap.docs
+        .map((d) => ReviewModel.fromMap(d.id, d.data()))
+        .toList();
+
+    final score = WorkerRankingService.computeScore(reviews, now);
+
+    double avgRating = 0.0;
+    if (reviews.isNotEmpty) {
+      avgRating = reviews
+              .map((r) => r.rating.toDouble())
+              .reduce((a, b) => a + b) /
+          reviews.length;
+    }
+
+    return _WorkerWithScore(
+      user: user,
+      doc: doc,
+      score: score,
+      avgRating: avgRating,
+      reviewCount: reviews.length,
+    );
+  }).toList();
+
+  final list = await Future.wait(futures);
+
+  list.sort((a, b) => b.score.compareTo(a.score));
+  return list;
 }
 
 Future<void> _approveWorker(BuildContext context, String workerId) async {

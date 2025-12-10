@@ -23,6 +23,9 @@ class AdminProfilePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF6FBFF),
       appBar: AppBar(
+        backgroundColor: const Color(0xFF29B6F6),
+        foregroundColor: Colors.white,
+        elevation: 4,
         title: const Text('Admin profile'),
       ),
       body: SafeArea(

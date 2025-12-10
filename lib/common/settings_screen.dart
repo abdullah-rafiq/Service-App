@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../theme_mode_notifier.dart';
+import '../app_locale.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -68,6 +69,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color(0xFF29B6F6),
+        foregroundColor: Colors.white,
+        elevation: 4,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
           onPressed: () {
@@ -155,47 +159,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 },
               ),
               const Divider(height: 1),
-              ListTile(
-                leading: const Icon(Icons.lock_reset),
-                title: const Text('Change password'),
-                subtitle:
-                    const Text('Send a password reset link to your email.'),
-                onTap: () async {
-                  final user = FirebaseAuth.instance.currentUser;
-                  final email = user?.email;
-
-                  if (email == null || email.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'No email found for this account. You may be using a social login.',
-                        ),
-                      ),
-                    );
-                    return;
-                  }
-
-                  try {
-                    await FirebaseAuth.instance
-                        .sendPasswordResetEmail(email: email);
-                    if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Password reset email sent. Please check your inbox.',
-                        ),
-                      ),
-                    );
-                  } catch (e) {
-                    if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Could not send reset email: $e',
-                        ),
-                      ),
-                    );
-                  }
+              ValueListenableBuilder<Locale>(
+                valueListenable: AppLocale.locale,
+                builder: (context, currentLocale, _) {
+                  final isUrdu = currentLocale.languageCode == 'ur';
+                  return ListTile(
+                    leading: const Icon(Icons.language),
+                    title: const Text('Language'),
+                    subtitle: Text(isUrdu ? 'Urdu' : 'English'),
+                    onTap: () async {
+                      final newLocale = isUrdu
+                          ? const Locale('en')
+                          : const Locale('ur');
+                      await AppLocale.setLocale(newLocale);
+                    },
+                  );
                 },
               ),
               const Divider(height: 1),
@@ -218,90 +196,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 },
               ),
               const Divider(height: 1),
-              ListTile(
-                leading: const Icon(
-                  Icons.delete_outline,
-                  color: Colors.redAccent,
-                ),
-                title: const Text('Delete account'),
-                subtitle:
-                    const Text('Permanently remove your account and data.'),
-                onTap: () async {
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        title: const Text('Delete account'),
-                        content: const Text(
-                          'This will permanently delete your account and data. This action cannot be undone.',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(false),
-                            child: const Text('Cancel'),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(true),
-                            style: TextButton.styleFrom(
-                              foregroundColor: Colors.redAccent,
-                            ),
-                            child: const Text('Delete'),
-                          ),
-                        ],
-                      );
-                    },
-                  );
-
-                  if (confirm != true) return;
-
-                  final user = FirebaseAuth.instance.currentUser;
-                  if (user == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('You must be logged in to delete account.'),
-                      ),
-                    );
-                    return;
-                  }
-
-                  try {
-                    final uid = user.uid;
-                    await FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(uid)
-                        .delete();
-
-                    await user.delete();
-
-                    if (!mounted) return;
-                    context.go('/auth');
-                  } on FirebaseAuthException catch (e) {
-                    if (!mounted) return;
-                    if (e.code == 'requires-recent-login') {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Please log in again and then try deleting your account.',
-                          ),
-                        ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Could not delete account: ${e.code}'),
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Could not delete account: $e'),
-                      ),
-                    );
-                  }
-                },
-              ),
             ],
           ),
         ),

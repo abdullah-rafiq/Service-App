@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:go_router/go_router.dart';
-
 import 'firebase_options.dart';
-import 'screens/splash_screen.dart';
-import 'screens/auth/login_screen.dart';
-import 'screens/auth/role_selection_screen.dart';
+import 'splash screen/splash_screen.dart';
+import 'auth/login_screen.dart';
+import 'auth/role_selection_screen.dart';
 import 'user/main_page.dart';
-import 'user/profile_page.dart';
+import 'common/profile_page.dart';
 import 'user/my_bookings_page.dart';
-import 'user/settings_screen.dart';
-import 'user/faq_page.dart';
-import 'user/contact_us_page.dart';
-import 'user/terms_and_conditions_page.dart';
-import 'user/privacy_policy_page.dart';
+import 'common/settings_screen.dart';
+import 'common/faq_page.dart';
+import 'common/contact_us_page.dart';
+import 'common/terms_and_conditions_page.dart';
+import 'common/privacy_policy_page.dart';
 import 'worker/worker_main_page.dart';
 import 'admin/admin_main_page.dart';
+import 'common/role_home_page.dart';
 import 'theme_mode_notifier.dart';
+import 'app_locale.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,6 +26,7 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await AppTheme.init();
+  await AppLocale.init();
   runApp(const MainApp());
 }
 
@@ -51,7 +54,7 @@ class MainApp extends StatelessWidget {
       GoRoute(
         path: '/home',
         name: 'home',
-        builder: (context, state) => const MainPage(),
+        builder: (context, state) => const RoleHomePage(),
       ),
       GoRoute(
         path: '/profile',
@@ -91,12 +94,12 @@ class MainApp extends StatelessWidget {
       GoRoute(
         path: '/worker',
         name: 'workerHome',
-        builder: (context, state) => const WorkerMainPage(),
+        builder: (context, state) => const RoleHomePage(),
       ),
       GoRoute(
         path: '/admin',
         name: 'adminHome',
-        builder: (context, state) => const AdminMainPage(),
+        builder: (context, state) => const RoleHomePage(),
       ),
     ],
   );
@@ -106,22 +109,37 @@ class MainApp extends StatelessWidget {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: AppTheme.themeMode,
       builder: (context, themeMode, _) {
-        return MaterialApp.router(
-          debugShowCheckedModeBanner: false,
-          title: 'Assist',
-          themeMode: themeMode,
-          theme: ThemeData(
-            primarySwatch: Colors.blue,
-            scaffoldBackgroundColor: const Color(0xFFF6FBFF),
-          ),
-          darkTheme: ThemeData(
-            brightness: Brightness.dark,
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.blue,
-              brightness: Brightness.dark,
-            ),
-          ),
-          routerConfig: _router,
+        return ValueListenableBuilder<Locale>(
+          valueListenable: AppLocale.locale,
+          builder: (context, locale, __) {
+            return MaterialApp.router(
+              debugShowCheckedModeBanner: false,
+              title: 'Assist',
+              themeMode: themeMode,
+              locale: locale,
+              supportedLocales: const [
+                Locale('en'),
+                Locale('ur'),
+              ],
+              localizationsDelegates: const [
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              theme: ThemeData(
+                primarySwatch: Colors.blue,
+                scaffoldBackgroundColor: const Color(0xFFF6FBFF),
+              ),
+              darkTheme: ThemeData(
+                brightness: Brightness.dark,
+                colorScheme: ColorScheme.fromSeed(
+                  seedColor: Colors.blue,
+                  brightness: Brightness.dark,
+                ),
+              ),
+              routerConfig: _router,
+            );
+          },
         );
       },
     );

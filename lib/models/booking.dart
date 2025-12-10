@@ -10,8 +10,9 @@ class BookingStatus {
 }
 
 class PaymentStatus {
+  static const pending = 'Pending';
   static const paid = 'Paid';
-  static const unpaid = 'Unpaid';
+  static const failed = 'Failed';
   static const refunded = 'Refunded';
 }
 
@@ -27,7 +28,13 @@ class BookingModel {
   final String? address;
   final num price;
   final String paymentStatus;
+  final String? paymentMethod; // jazzcash | easypaisa | card | cod
+  final String? paymentProviderId; // PSP transaction / intent id
+  final num? paymentAmount; // amount actually charged (PKR)
   final String? notes;
+  final String? cancelledBy; // worker | customer | system
+  final bool? isNoShow; // true if provider never showed up
+  final bool? hasDispute; // true if this booking had a dispute
 
   const BookingModel({
     required this.id,
@@ -40,8 +47,14 @@ class BookingModel {
     this.location,
     this.address,
     this.price = 0,
-    this.paymentStatus = PaymentStatus.unpaid,
+    this.paymentStatus = PaymentStatus.pending,
+    this.paymentMethod,
+    this.paymentProviderId,
+    this.paymentAmount,
     this.notes,
+    this.cancelledBy,
+    this.isNoShow,
+    this.hasDispute,
   });
 
   factory BookingModel.fromMap(String id, Map<String, dynamic> data) {
@@ -56,8 +69,15 @@ class BookingModel {
       location: data['location'] as GeoPoint?,
       address: data['address'] as String?,
       price: (data['price'] as num?) ?? 0,
-      paymentStatus: data['paymentStatus'] as String? ?? PaymentStatus.unpaid,
+      paymentStatus:
+          data['paymentStatus'] as String? ?? PaymentStatus.pending,
+      paymentMethod: data['paymentMethod'] as String?,
+      paymentProviderId: data['paymentProviderId'] as String?,
+      paymentAmount: data['paymentAmount'] as num?,
       notes: data['notes'] as String?,
+      cancelledBy: data['cancelledBy'] as String?,
+      isNoShow: data['isNoShow'] as bool?,
+      hasDispute: data['hasDispute'] as bool?,
     );
   }
 
@@ -74,7 +94,13 @@ class BookingModel {
       'address': address,
       'price': price,
       'paymentStatus': paymentStatus,
+      'paymentMethod': paymentMethod,
+      'paymentProviderId': paymentProviderId,
+      'paymentAmount': paymentAmount,
       'notes': notes,
+      'cancelledBy': cancelledBy,
+      'isNoShow': isNoShow,
+      'hasDispute': hasDispute,
     };
   }
 }
