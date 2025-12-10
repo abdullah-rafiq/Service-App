@@ -14,7 +14,7 @@ import 'user/faq_page.dart';
 import 'user/contact_us_page.dart';
 import 'user/terms_and_conditions_page.dart';
 import 'user/privacy_policy_page.dart';
-import 'worker/worker_home_screen.dart';
+import 'worker/worker_main_page.dart';
 import 'theme_mode_notifier.dart';
 
 Future<void> main() async {
@@ -90,7 +90,7 @@ class MainApp extends StatelessWidget {
       GoRoute(
         path: '/worker',
         name: 'workerHome',
-        builder: (context, state) => const WorkerHomeScreen(),
+        builder: (context, state) => const WorkerMainPage(),
       ),
     ],
   );

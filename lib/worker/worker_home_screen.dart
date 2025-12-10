@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'worker_job_detail_page.dart';
+
+import 'worker_jobs_page.dart';
 import 'worker_earnings_page.dart';
 
 class WorkerHomeScreen extends StatelessWidget {
@@ -43,7 +44,7 @@ class WorkerHomeScreen extends StatelessWidget {
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => const WorkerJobDetailPage(),
+                    builder: (_) => const WorkerJobsPage(),
                   ),
                 );
               },

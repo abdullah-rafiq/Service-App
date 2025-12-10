@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 import 'package:flutter_application_1/models/app_user.dart';
@@ -51,7 +52,6 @@ class _MainPageState extends State<MainPage> {
   // Speech-to-text
   final stt.SpeechToText _speech = stt.SpeechToText();
   bool _isListening = false;
-  String _voiceQuery = '';
 
   @override
   void initState() {
@@ -357,12 +357,13 @@ class _MainPageState extends State<MainPage> {
           final text = result.recognizedWords.trim();
           setState(() {
             _isListening = false;
-            _voiceQuery = text;
           });
+
+          if (text.isEmpty) return;
 
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) => const CategorySearchPage(),
+              builder: (_) => CategorySearchPage(initialQuery: text),
             ),
           );
         },
@@ -787,7 +788,7 @@ class _MainPageState extends State<MainPage> {
             _currentIndex = index;
           });
         },
-        items: const [
+        items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
             label: 'Home',
@@ -801,7 +802,7 @@ class _MainPageState extends State<MainPage> {
             label: 'Bookings',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.message_outlined),
+            icon: _MessagesIconWithBadge(),
             label: 'Messages',
           ),
           BottomNavigationBarItem(
@@ -813,3 +814,48 @@ class _MainPageState extends State<MainPage> {
     );
   }
 }
+
+class _MessagesIconWithBadge extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return const Icon(Icons.message_outlined);
+    }
+
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('chats')
+          .where('participants', arrayContains: user.uid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        final docs = snapshot.data?.docs ?? [];
+        final hasUnread = docs.any((doc) {
+          final data = doc.data();
+          final lastSender = data['lastMessageSenderId'] as String?;
+          return lastSender != null && lastSender != user.uid;
+        });
+
+        if (!hasUnread) {
+          return const Icon(Icons.message_outlined);
+        }
+
+        return Stack(
+          clipBehavior: Clip.none,
+          children: const [
+            Icon(Icons.message_outlined),
+            Positioned(
+              right: -2,
+              top: -2,
+              child: CircleAvatar(
+                radius: 4,
+                backgroundColor: Colors.red,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+

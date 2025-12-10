@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter_application_1/models/booking.dart';
 import 'package:flutter_application_1/services/booking_service.dart';
+import 'package:flutter_application_1/services/user_service.dart';
 import 'package:flutter_application_1/user/payment_page.dart';
+import 'package:flutter_application_1/user/chat_page.dart';
 
 class BookingDetailPage extends StatelessWidget {
   final BookingModel booking;
@@ -212,6 +217,14 @@ class BookingDetailPage extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              icon: const Icon(Icons.message_outlined),
+              label: const Text('Message provider'),
+              onPressed: booking.providerId == null
+                  ? null
+                  : () => _openChatForBooking(context, booking),
+            ),
           ],
         ),
       ),
@@ -241,5 +254,59 @@ String _formatDateTime(DateTime? dt) {
       '${local.day.toString().padLeft(2, '0')}';
   final time = '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
   return '$date • $time';
+}
+
+Future<void> _openChatForBooking(
+  BuildContext context,
+  BookingModel booking,
+) async {
+  final current = FirebaseAuth.instance.currentUser;
+  if (current == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Please log in to send messages.')),
+    );
+    return;
+  }
+
+  final providerId = booking.providerId;
+  if (providerId == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('No provider assigned to this booking.')),
+    );
+    return;
+  }
+
+  final customerId = booking.customerId;
+  final ids = [customerId, providerId]..sort();
+  final chatId = ids.join('_');
+
+  final chatRef = FirebaseFirestore.instance.collection('chats').doc(chatId);
+
+  await chatRef.set(
+    {
+      'participants': ids,
+      'updatedAt': FieldValue.serverTimestamp(),
+    },
+    SetOptions(merge: true),
+  );
+
+  final otherId = current.uid == customerId ? providerId : customerId;
+  final other = await UserService.instance.getById(otherId);
+  if (other == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Could not load user for chat.')),
+    );
+    return;
+  }
+
+  if (!context.mounted) return;
+  Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (_) => ChatPage(
+        chatId: chatId,
+        otherUser: other,
+      ),
+    ),
+  );
 }
 
