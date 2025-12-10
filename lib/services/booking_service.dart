@@ -14,14 +14,23 @@ class BookingService {
 
   Future<String> createBooking(BookingModel booking) async {
     final doc = await _col.add(booking.toMap());
+    // Simple analytics/logging
+    // ignore: avoid_print
+    print('BOOKING_CREATED id=${doc.id} customer=${booking.customerId} provider=${booking.providerId} service=${booking.serviceId}');
     return doc.id;
   }
 
   Future<void> updateStatus(String bookingId, String status) {
+    // Simple analytics/logging
+    // ignore: avoid_print
+    print('BOOKING_STATUS_UPDATED id=$bookingId status=$status');
     return _col.doc(bookingId).update({'status': status});
   }
 
   Future<void> updatePaymentStatus(String bookingId, String paymentStatus) {
+    // Simple analytics/logging
+    // ignore: avoid_print
+    print('BOOKING_PAYMENT_UPDATED id=$bookingId paymentStatus=$paymentStatus');
     return _col.doc(bookingId).update({'paymentStatus': paymentStatus});
   }
 

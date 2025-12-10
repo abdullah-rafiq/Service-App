@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../theme_mode_notifier.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -11,6 +14,55 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _notificationsEnabled = true;
+  bool _loadingNotifications = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotificationPreference();
+  }
+
+  Future<void> _loadNotificationPreference() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        setState(() {
+          _loadingNotifications = false;
+        });
+        return;
+      }
+
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (!doc.exists) {
+        setState(() {
+          _loadingNotifications = false;
+        });
+        return;
+      }
+
+      final data = doc.data();
+      final value = data?['notificationsEnabled'];
+
+      if (value is bool) {
+        setState(() {
+          _notificationsEnabled = value;
+          _loadingNotifications = false;
+        });
+      } else {
+        setState(() {
+          _loadingNotifications = false;
+        });
+      }
+    } catch (_) {
+      setState(() {
+        _loadingNotifications = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,11 +99,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 subtitle: const Text(
                     'Receive updates about your bookings and offers.'),
                 value: _notificationsEnabled,
-                onChanged: (value) {
-                  setState(() {
-                    _notificationsEnabled = value;
-                  });
-                },
+                onChanged: _loadingNotifications
+                    ? null
+                    : (value) async {
+                        setState(() {
+                          _notificationsEnabled = value;
+                        });
+
+                        final user = FirebaseAuth.instance.currentUser;
+                        if (user == null) return;
+
+                        try {
+                          await FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(user.uid)
+                              .set(
+                            {
+                              'notificationsEnabled': value,
+                            },
+                            SetOptions(merge: true),
+                          );
+                        } catch (_) {
+                          // Revert on failure
+                          setState(() {
+                            _notificationsEnabled = !value;
+                          });
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Could not update notification preference. Please try again.',
+                                ),
+                              ),
+                            );
+                          }
+                        }
+                      },
               ),
               const Divider(height: 1),
               ValueListenableBuilder<ThemeMode>(
@@ -73,6 +156,50 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const Divider(height: 1),
               ListTile(
+                leading: const Icon(Icons.lock_reset),
+                title: const Text('Change password'),
+                subtitle:
+                    const Text('Send a password reset link to your email.'),
+                onTap: () async {
+                  final user = FirebaseAuth.instance.currentUser;
+                  final email = user?.email;
+
+                  if (email == null || email.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'No email found for this account. You may be using a social login.',
+                        ),
+                      ),
+                    );
+                    return;
+                  }
+
+                  try {
+                    await FirebaseAuth.instance
+                        .sendPasswordResetEmail(email: email);
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Password reset email sent. Please check your inbox.',
+                        ),
+                      ),
+                    );
+                  } catch (e) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Could not send reset email: $e',
+                        ),
+                      ),
+                    );
+                  }
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
                 leading: const Icon(Icons.description_outlined),
                 title: const Text('Terms & conditions'),
                 subtitle:
@@ -88,6 +215,91 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 subtitle: const Text('Learn how we handle your data.'),
                 onTap: () {
                   context.push('/privacy');
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(
+                  Icons.delete_outline,
+                  color: Colors.redAccent,
+                ),
+                title: const Text('Delete account'),
+                subtitle:
+                    const Text('Permanently remove your account and data.'),
+                onTap: () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: const Text('Delete account'),
+                        content: const Text(
+                          'This will permanently delete your account and data. This action cannot be undone.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.redAccent,
+                            ),
+                            child: const Text('Delete'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+
+                  if (confirm != true) return;
+
+                  final user = FirebaseAuth.instance.currentUser;
+                  if (user == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('You must be logged in to delete account.'),
+                      ),
+                    );
+                    return;
+                  }
+
+                  try {
+                    final uid = user.uid;
+                    await FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(uid)
+                        .delete();
+
+                    await user.delete();
+
+                    if (!mounted) return;
+                    context.go('/auth');
+                  } on FirebaseAuthException catch (e) {
+                    if (!mounted) return;
+                    if (e.code == 'requires-recent-login') {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Please log in again and then try deleting your account.',
+                          ),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Could not delete account: ${e.code}'),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Could not delete account: $e'),
+                      ),
+                    );
+                  }
                 },
               ),
             ],

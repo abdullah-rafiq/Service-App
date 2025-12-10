@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+
+import 'package:flutter_application_1/models/app_user.dart';
 import 'package:flutter_application_1/models/category.dart';
 import 'package:flutter_application_1/models/service.dart';
 import 'package:flutter_application_1/services/service_catalog_service.dart';
+import 'package:flutter_application_1/services/user_service.dart';
 import 'package:flutter_application_1/user/category_services_page.dart';
 import 'package:flutter_application_1/user/service_detail_page.dart';
 import 'package:flutter_application_1/user/my_bookings_page.dart';
@@ -36,11 +41,28 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  
   final Color primaryLightBlue = const Color(0xFF4FC3F7);
   final Color primaryBlue = const Color(0xFF29B6F6);
   final Color primaryDarkBlue = const Color(0xFF0288D1);
   late final Color surfaceWhite = Colors.white.withOpacity(0.95);
   int _currentIndex = 0;
+
+  // Speech-to-text
+  final stt.SpeechToText _speech = stt.SpeechToText();
+  bool _isListening = false;
+  String _voiceQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    final current = FirebaseAuth.instance.currentUser;
+    // Debug print to verify which UID is logged in
+    // Check this value in the console and ensure your notifications.userId matches it.
+    // Remove this print in production.
+    // ignore: avoid_print
+    print('CURRENT UID = ${current?.uid}');
+  }
 
   final List<ProviderModel> featuredProviders = [
     ProviderModel(
@@ -71,6 +93,7 @@ class _MainPageState extends State<MainPage> {
 
   Widget _buildGradientAppBar(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
+    final current = FirebaseAuth.instance.currentUser;
     return Container(
       height: kToolbarHeight + topPadding,
       padding: EdgeInsets.only(top: topPadding, left: 12, right: 12),
@@ -100,19 +123,57 @@ class _MainPageState extends State<MainPage> {
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
+                children: [
+                  const Text(
                     'Welcome,',
                     style: TextStyle(color: Colors.white70, fontSize: 12),
                   ),
-                  Text(
-                    'Ali',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
+                  if (current == null)
+                    const Text(
+                      'User',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    )
+                  else
+                    StreamBuilder<AppUser?>(
+                      stream:
+                          UserService.instance.watchUser(current.uid),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Text(
+                            '...',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16,
+                            ),
+                          );
+                        }
+
+                        final user = snapshot.data;
+                        String? name = user?.name;
+                        String displayName = 'User';
+
+                        if (name != null && name.trim().isNotEmpty) {
+                          name = name.trim();
+                          displayName = name[0].toUpperCase() +
+                              (name.length > 1 ? name.substring(1) : '');
+                        }
+
+                        return Text(
+                          displayName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                          ),
+                        );
+                      },
                     ),
-                  ),
                 ],
               ),
             ],
@@ -246,18 +307,72 @@ class _MainPageState extends State<MainPage> {
                 style: TextStyle(color: Colors.black54),
               ),
             ),
-            Container(
-              decoration: BoxDecoration(
-                color: primaryLightBlue.withOpacity(0.12),
-                shape: BoxShape.circle,
+            GestureDetector(
+              onTap: () => _startVoiceSearch(context),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: primaryLightBlue.withOpacity(0.12),
+                  shape: BoxShape.circle,
+                ),
+                padding: const EdgeInsets.all(8),
+                child: Icon(
+                  _isListening ? Icons.mic : Icons.mic_none,
+                  color: primaryDarkBlue,
+                  size: 18,
+                ),
               ),
-              padding: const EdgeInsets.all(8),
-              child: Icon(Icons.mic, color: primaryDarkBlue, size: 18),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _startVoiceSearch(BuildContext context) async {
+    try {
+      final available = await _speech.initialize(
+        onStatus: (status) {
+          // ignore: avoid_print
+          print('SPEECH_STATUS: $status');
+        },
+        onError: (error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Speech error: ${error.errorMsg}')),
+          );
+        },
+      );
+
+      if (!available) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Speech recognition not available')),
+        );
+        return;
+      }
+
+      setState(() => _isListening = true);
+
+      _speech.listen(
+        onResult: (result) {
+          if (!result.finalResult) return;
+          final text = result.recognizedWords.trim();
+          setState(() {
+            _isListening = false;
+            _voiceQuery = text;
+          });
+
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const CategorySearchPage(),
+            ),
+          );
+        },
+      );
+    } catch (e) {
+      setState(() => _isListening = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not start voice search: $e')),
+      );
+    }
   }
 
   Widget _buildCategories() {

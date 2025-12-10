@@ -31,7 +31,7 @@ class WalletPage extends StatelessWidget {
       );
     }
 
-    Future<void> _showTopUpDialog(String method) async {
+    Future<void> showTopUpDialog(String method) async {
       final controller = TextEditingController();
       final amount = await showDialog<num?>(
         context: context,
@@ -151,7 +151,7 @@ class WalletPage extends StatelessWidget {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => _showTopUpDialog('Top-up'),
+                        onPressed: () => showTopUpDialog('Top-up'),
                         icon: const Icon(Icons.add_circle_outline),
                         label: const Text('Add money'),
                       ),

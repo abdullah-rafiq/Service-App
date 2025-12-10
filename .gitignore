@@ -50,6 +50,8 @@ coverage/
 firebase_options.dart
 lib/firebase_options.dart
 assets
+google-services.json
+GoogleService-Info.plist
 # ---------------------------
 # Generated build artifacts
 # ---------------------------
@@ -131,6 +133,4 @@ app.*.map.json
 README.md
 
 .metadata
-
 pubspec.lock
-pubspec.yaml

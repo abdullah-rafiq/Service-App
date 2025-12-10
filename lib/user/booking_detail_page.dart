@@ -42,27 +42,134 @@ class BookingDetailPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Service ID: ${booking.serviceId}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Booking #${booking.id}',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color:
+                              _statusColor(booking.status).withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          booking.status,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: _statusColor(booking.status),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.calendar_today_outlined,
+                        size: 18,
+                        color: Colors.black54,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          booking.scheduledTime == null
+                              ? 'Scheduled time: Not set'
+                              : 'Scheduled time: ${_formatDateTime(booking.scheduledTime)}',
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
-                  Text('Status: ${booking.status}'),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Scheduled time: '
-                    '${booking.scheduledTime == null ? 'Not set' : booking.scheduledTime.toString()}',
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.place_outlined,
+                        size: 18,
+                        color: Colors.black54,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          (booking.address != null &&
+                                  booking.address!.isNotEmpty)
+                              ? booking.address!
+                              : 'Address: Not provided',
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
-                  Text('Price: PKR ${booking.price.toStringAsFixed(0)}'),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.attach_money,
+                        size: 18,
+                        color: Colors.black54,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'PKR ${booking.price.toStringAsFixed(0)}',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 8),
-                  Text('Payment status: ${booking.paymentStatus}'),
-                  const SizedBox(height: 8),
-                  if (booking.address != null && booking.address!.isNotEmpty)
-                    Text('Address: ${booking.address}'),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.payment_outlined,
+                        size: 18,
+                        color: Colors.black54,
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: booking.paymentStatus == PaymentStatus.unpaid
+                              ? Colors.redAccent.withOpacity(0.12)
+                              : Colors.green.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          booking.paymentStatus == PaymentStatus.unpaid
+                              ? 'Unpaid'
+                              : 'Paid',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color:
+                                booking.paymentStatus == PaymentStatus.unpaid
+                                    ? Colors.redAccent
+                                    : Colors.green,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -111,3 +218,28 @@ class BookingDetailPage extends StatelessWidget {
     );
   }
 }
+
+Color _statusColor(String status) {
+  switch (status) {
+    case BookingStatus.completed:
+      return Colors.green;
+    case BookingStatus.cancelled:
+      return Colors.redAccent;
+    case BookingStatus.inProgress:
+    case BookingStatus.onTheWay:
+      return Colors.orange;
+    default:
+      return Colors.blueGrey;
+  }
+}
+
+String _formatDateTime(DateTime? dt) {
+  if (dt == null) return 'Not set';
+  final local = dt.toLocal();
+  final date = '${local.year.toString().padLeft(4, '0')}-'
+      '${local.month.toString().padLeft(2, '0')}-'
+      '${local.day.toString().padLeft(2, '0')}';
+  final time = '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+  return '$date • $time';
+}
+

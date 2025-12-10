@@ -9,7 +9,7 @@ class PaymentPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Future<void> _handlePayment(String method) async {
+    Future<void> handlePayment(String method) async {
       await BookingService.instance
           .updatePaymentStatus(booking.id, PaymentStatus.paid);
 
@@ -84,7 +84,7 @@ class PaymentPage extends StatelessWidget {
               subtitle: const Text('Pay using your JazzCash mobile wallet.'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
-                _handlePayment('JazzCash');
+                handlePayment('JazzCash');
               },
             ),
           ),
@@ -97,7 +97,7 @@ class PaymentPage extends StatelessWidget {
               subtitle: const Text('Pay using your Easypaisa mobile wallet.'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
-                _handlePayment('Easypaisa');
+                handlePayment('Easypaisa');
               },
             ),
           ),
@@ -109,7 +109,7 @@ class PaymentPage extends StatelessWidget {
               subtitle: const Text('Pay with Visa, Mastercard or other cards.'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
-                _handlePayment('Card / Bank');
+                handlePayment('Card / Bank');
               },
             ),
           ),

@@ -1,8 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:flutter_application_1/models/booking.dart';
+import 'package:flutter_application_1/models/service.dart';
 import 'package:flutter_application_1/services/booking_service.dart';
+import 'package:flutter_application_1/services/service_catalog_service.dart';
 import 'package:flutter_application_1/user/payment_page.dart';
 import 'package:flutter_application_1/user/booking_detail_page.dart';
 
@@ -47,12 +50,53 @@ class MyBookingsPage extends StatelessWidget {
           final bookings = snapshot.data ?? [];
 
           if (bookings.isEmpty) {
-            return const Center(
-              child: Text('No bookings yet.'),
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.event_busy,
+                    size: 64,
+                    color: Colors.black26,
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'No bookings yet',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'When you book a service, it will appear here.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.black54,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      context.go('/home');
+                    },
+                    icon: const Icon(Icons.home_outlined),
+                    label: const Text('Browse services'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF29B6F6),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             );
           }
 
-          Color _statusColor(String status) {
+          Color statusColor(String status) {
             switch (status) {
               case BookingStatus.completed:
                 return Colors.green;
@@ -94,30 +138,41 @@ class MyBookingsPage extends StatelessWidget {
                   },
                   child: Row(
                     children: [
-                      const Icon(Icons.cleaning_services_rounded,
-                          color: Colors.blueAccent),
+                      const Icon(
+                        Icons.cleaning_services_rounded,
+                        color: Colors.blueAccent,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Service: ${b.serviceId}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              b.scheduledTime == null
-                                  ? 'Time: not set'
-                                  : 'Time: ${b.scheduledTime}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.black54,
-                              ),
-                            ),
-                          ],
+                        child: FutureBuilder<ServiceModel?>(
+                          future: ServiceCatalogService.instance
+                              .getService(b.serviceId),
+                          builder: (context, serviceSnap) {
+                            final service = serviceSnap.data;
+                            final serviceName = service?.name ?? 'Service';
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  serviceName,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  b.scheduledTime == null
+                                      ? 'Time: not set'
+                                      : 'Time: ${_formatDateTime(b.scheduledTime)}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -130,7 +185,7 @@ class MyBookingsPage extends StatelessWidget {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: _statusColor(b.status).withOpacity(0.12),
+                              color: statusColor(b.status).withOpacity(0.12),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
@@ -138,7 +193,7 @@ class MyBookingsPage extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
-                                color: _statusColor(b.status),
+                                color: statusColor(b.status),
                               ),
                             ),
                           ),
@@ -185,4 +240,14 @@ class MyBookingsPage extends StatelessWidget {
       backgroundColor: const Color(0xFFF6FBFF),
     );
   }
+}
+
+String _formatDateTime(DateTime? dt) {
+  if (dt == null) return 'Not set';
+  final local = dt.toLocal();
+  final date = '${local.year.toString().padLeft(4, '0')}-'
+      '${local.month.toString().padLeft(2, '0')}-'
+      '${local.day.toString().padLeft(2, '0')}';
+  final time = '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+  return '$date • $time';
 }

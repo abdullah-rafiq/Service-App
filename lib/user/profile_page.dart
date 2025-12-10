@@ -44,6 +44,14 @@ class ProfilePage extends StatelessWidget {
             }
 
             final profile = snapshot.data;
+
+            if (profile != null && !profile.verified) {
+              final authUser = current;
+              if (authUser.emailVerified) {
+                UserService.instance
+                    .updateUser(current.uid, {'verified': true});
+              }
+            }
             final displayName =
                 profile?.name ?? current.displayName ?? 'User';
             final profileImageUrl = profile?.profileImageUrl;
@@ -121,32 +129,41 @@ class ProfilePage extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 2),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                profile.verified
-                                    ? Icons.verified
-                                    : Icons.error_outline,
-                                size: 16,
-                                color: profile.verified
-                                    ? Colors.green
-                                    : Colors.orange,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                profile.verified
-                                    ? 'Verified account'
-                                    : 'Not verified',
-                                style: TextStyle(
-                                  fontSize: 13,
+                          InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: profile.verified
+                                ? null
+                                : () => _startPhoneVerification(
+                                      context,
+                                      profile,
+                                    ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  profile.verified
+                                      ? Icons.verified
+                                      : Icons.error_outline,
+                                  size: 16,
                                   color: profile.verified
                                       ? Colors.green
                                       : Colors.orange,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 4),
+                                Text(
+                                  profile.verified
+                                      ? 'Verified account'
+                                      : 'Not verified (tap to verify)',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: profile.verified
+                                        ? Colors.green
+                                        : Colors.orange,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -218,6 +235,21 @@ class ProfilePage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
+                  if (profile != null) ...[
+                    ListTile(
+                      title: const Text('Edit profile'),
+                      subtitle: Text(
+                        profile.name == null || profile.name!.isEmpty
+                            ? 'Add your name and phone number'
+                            : 'Update your name or phone number',
+                      ),
+                      leading: const Icon(Icons.person_outline),
+                      trailing:
+                          const Icon(Icons.chevron_right, color: yellow),
+                      onTap: () => _showEditProfileDialog(context, profile),
+                    ),
+                    const Divider(),
+                  ],
                   ListTile(
                     title: const Text('Settings'),
                     subtitle: const Text('Privacy and logout'),
@@ -257,6 +289,18 @@ class ProfilePage extends StatelessWidget {
                     },
                   ),
                   const Divider(),
+                  ListTile(
+                    title: const Text('Logout'),
+                    subtitle: const Text('Sign out from this account'),
+                    leading: const Icon(Icons.logout),
+                    trailing: const Icon(Icons.chevron_right, color: yellow),
+                    onTap: () async {
+                      await FirebaseAuth.instance.signOut();
+                      if (context.mounted) {
+                        context.go('/auth');
+                      }
+                    },
+                  ),
                 ],
               ),
             );
@@ -265,6 +309,314 @@ class ProfilePage extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<void> _showEditProfileDialog(BuildContext context, AppUser profile) async {
+  final nameController = TextEditingController(text: profile.name ?? '');
+  final phoneController = TextEditingController(text: profile.phone ?? '');
+
+  await showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (context) {
+      final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+      return Padding(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: bottomInset + 16,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Edit profile',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Update your basic information so providers can recognize you easily.',
+              style: TextStyle(fontSize: 13, color: Colors.black54),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: nameController,
+              textInputAction: TextInputAction.next,
+              decoration: const InputDecoration(
+                labelText: 'Full name',
+                prefixIcon: Icon(Icons.person_outline),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: phoneController,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(
+                labelText: 'Phone number',
+                hintText: '+92 300 1234567',
+                prefixIcon: Icon(Icons.phone_outlined),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      final name = nameController.text.trim();
+                      final phone = phoneController.text.trim();
+
+                      if (name.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Name cannot be empty.')),
+                        );
+                        return;
+                      }
+
+                      try {
+                        await UserService.instance.updateUser(profile.id, {
+                          'name': name,
+                          'phone': phone.isEmpty ? null : phone,
+                        });
+
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Profile updated successfully.'),
+                          ),
+                        );
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Failed to update profile: $e'),
+                          ),
+                        );
+                      }
+                    },
+                    child: const Text('Save changes'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+Future<void> _startPhoneVerification(
+    BuildContext context, AppUser profile) async {
+  final phone = profile.phone?.trim();
+
+  if (phone == null || phone.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Please add your phone number in Edit profile first.'),
+      ),
+    );
+    return;
+  }
+
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('You must be logged in to verify.')),
+    );
+    return;
+  }
+
+  try {
+    await FirebaseAuth.instance.verifyPhoneNumber(
+      phoneNumber: phone,
+      verificationCompleted: (PhoneAuthCredential credential) async {
+        try {
+          await user.linkWithCredential(credential);
+        } catch (_) {
+          // Ignore link errors; user might already be linked.
+        }
+
+        await UserService.instance
+            .updateUser(profile.id, {'verified': true});
+
+        if (context.mounted) {
+          // Simple analytics/logging
+          // ignore: avoid_print
+          print('PHONE_VERIFIED_AUTO uid=${profile.id}');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Phone verified successfully.')),
+          );
+        }
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Verification failed: ${e.message}')),
+        );
+      },
+      codeSent: (String verificationId, int? resendToken) async {
+        await _showOtpBottomSheet(
+          context: context,
+          verificationId: verificationId,
+          profile: profile,
+        );
+      },
+      codeAutoRetrievalTimeout: (String verificationId) {
+        // Optional: you can inform the user that auto-retrieval timed out.
+      },
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Could not start phone verification: $e')),
+    );
+  }
+}
+
+Future<void> _showOtpBottomSheet({
+  required BuildContext context,
+  required String verificationId,
+  required AppUser profile,
+}) async {
+  final codeController = TextEditingController();
+
+  await showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (context) {
+      final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+      return Padding(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: bottomInset + 16,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Enter OTP',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'We\'ve sent a 6-digit code to your phone. Enter it below to verify your account.',
+              style: TextStyle(fontSize: 13, color: Colors.black54),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: codeController,
+              keyboardType: TextInputType.number,
+              maxLength: 6,
+              decoration: const InputDecoration(
+                labelText: 'OTP code',
+                prefixIcon: Icon(Icons.sms_outlined),
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () async {
+                  final code = codeController.text.trim();
+                  if (code.length < 6) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please enter the 6-digit code.'),
+                      ),
+                    );
+                    return;
+                  }
+
+                  try {
+                    final credential = PhoneAuthProvider.credential(
+                      verificationId: verificationId,
+                      smsCode: code,
+                    );
+
+                    final user = FirebaseAuth.instance.currentUser;
+                    if (user == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('You must be logged in to verify.'),
+                        ),
+                      );
+                      return;
+                    }
+
+                    try {
+                      await user.linkWithCredential(credential);
+                    } catch (_) {
+                      // Ignore link errors; user might already be linked or signed in.
+                    }
+
+                    await UserService.instance
+                        .updateUser(profile.id, {'verified': true});
+
+                    if (context.mounted) {
+                      Navigator.of(context).pop();
+                      // Simple analytics/logging
+                      // ignore: avoid_print
+                      print('PHONE_VERIFIED_OTP uid=${profile.id}');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Phone verified successfully.'),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Invalid code: $e')),
+                    );
+                  }
+                },
+                child: const Text('Verify'),
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
 }
 
 Future<void> _changeProfileImage(BuildContext context, String uid) async {
@@ -314,6 +666,7 @@ Future<void> _changeProfileImage(BuildContext context, String uid) async {
     );
   }
 }
+
 class _QuickAction extends StatelessWidget {
   final String iconPath;
   final String label;

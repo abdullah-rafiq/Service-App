@@ -3,6 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:flutter_application_1/models/app_user.dart';
+import 'package:flutter_application_1/services/auth_service.dart';
+
 import 'signup_screen.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -54,12 +57,15 @@ class _AuthScreenState extends State<AuthScreen> {
     }
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+      final cred = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
 
       if (!mounted) return;
+      // Simple analytics/logging
+      // ignore: avoid_print
+      print('LOGIN_EMAIL_SUCCESS user=${cred.user?.uid}');
       context.go('/role');
     } on FirebaseAuthException catch (e) {
       String message = 'Login failed';
@@ -85,28 +91,40 @@ class _AuthScreenState extends State<AuthScreen> {
   Future<void> _signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return;
+      if (googleUser == null) return; // user cancelled
 
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
+      final googleAuth = await googleUser.authentication;
 
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      await FirebaseAuth.instance.signInWithCredential(credential);
+      final userCred =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+      final firebaseUser = userCred.user;
+
+      if (firebaseUser != null) {
+        // Ensure there is a Firestore user document; role will be chosen on /role
+        await AuthService.instance.ensureUserDocument(
+          firebaseUser: firebaseUser,
+          role: UserRole.customer,
+        );
+      }
 
       if (!mounted) return;
+      // Simple analytics/logging
+      // ignore: avoid_print
+      print('LOGIN_GOOGLE_SUCCESS user=${firebaseUser?.uid}');
       context.go('/role');
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.message ?? 'Google sign-in failed')),
       );
-    } catch (_) {
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Something went wrong with Google sign-in'),
+        SnackBar(
+          content: Text('Something went wrong with Google sign-in: $e'),
         ),
       );
     }
