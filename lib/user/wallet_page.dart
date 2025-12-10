@@ -201,7 +201,7 @@ class WalletPage extends StatelessWidget {
 
                       final all = snap.data ?? [];
                       final unpaid = all
-                          .where((b) => b.paymentStatus == PaymentStatus.unpaid)
+                          .where((b) => b.paymentStatus == PaymentStatus.pending)
                           .toList();
 
                       if (unpaid.isEmpty) {

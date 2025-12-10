@@ -154,22 +154,21 @@ class BookingDetailPage extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: booking.paymentStatus == PaymentStatus.unpaid
+                          color: booking.paymentStatus == PaymentStatus.pending
                               ? Colors.redAccent.withOpacity(0.12)
                               : Colors.green.withOpacity(0.12),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          booking.paymentStatus == PaymentStatus.unpaid
-                              ? 'Unpaid'
+                          booking.paymentStatus == PaymentStatus.pending
+                              ? 'Pending'
                               : 'Paid',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color:
-                                booking.paymentStatus == PaymentStatus.unpaid
-                                    ? Colors.redAccent
-                                    : Colors.green,
+                            color: booking.paymentStatus == PaymentStatus.pending
+                                ? Colors.redAccent
+                                : Colors.green,
                           ),
                         ),
                       ),
@@ -183,7 +182,8 @@ class BookingDetailPage extends StatelessWidget {
               children: [
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: booking.paymentStatus == PaymentStatus.unpaid
+                    onPressed:
+                        booking.paymentStatus == PaymentStatus.pending
                         ? () {
                             Navigator.of(context).push(
                               MaterialPageRoute(

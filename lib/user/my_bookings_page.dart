@@ -205,7 +205,7 @@ class MyBookingsPage extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          if (b.paymentStatus == PaymentStatus.unpaid)
+                          if (b.paymentStatus == PaymentStatus.pending)
                             TextButton(
                               onPressed: () {
                                 Navigator.of(context).push(
