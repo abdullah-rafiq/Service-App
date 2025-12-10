@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
+import 'package:flutter_application_1/models/app_user.dart';
+import 'package:flutter_application_1/services/user_service.dart';
+import 'package:flutter_application_1/user/profile_page.dart';
 import 'worker_jobs_page.dart';
 import 'worker_earnings_page.dart';
 
@@ -24,6 +28,8 @@ class WorkerHomeScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            _WorkerVerificationBanner(),
+            const SizedBox(height: 12),
             const Text(
               'Today\'s overview',
               style: TextStyle(
@@ -168,6 +174,81 @@ class WorkerHomeScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _WorkerVerificationBanner extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final current = FirebaseAuth.instance.currentUser;
+    if (current == null) {
+      return const SizedBox.shrink();
+    }
+
+    return StreamBuilder<AppUser?>(
+      stream: UserService.instance.watchUser(current.uid),
+      builder: (context, snapshot) {
+        final user = snapshot.data;
+        if (user == null || user.role != UserRole.provider || user.verified) {
+          return const SizedBox.shrink();
+        }
+
+        return Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFF3E0),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                Icons.info_outline,
+                color: Color(0xFFF57C00),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Complete verification to take jobs',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFFBF360C),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Verify your account (phone / details) so you can start accepting and completing jobs.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const ProfilePage(),
+                            ),
+                          );
+                        },
+                        child: const Text('Go to profile to verify'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

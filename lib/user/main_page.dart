@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:speech_to_text/speech_to_text.dart' as stt;
+// import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 import 'package:flutter_application_1/models/app_user.dart';
 import 'package:flutter_application_1/models/category.dart';
@@ -50,7 +50,7 @@ class _MainPageState extends State<MainPage> {
   int _currentIndex = 0;
 
   // Speech-to-text
-  final stt.SpeechToText _speech = stt.SpeechToText();
+  //final stt.SpeechToText _speech = stt.SpeechToText();
   bool _isListening = false;
 
   @override
@@ -307,74 +307,74 @@ class _MainPageState extends State<MainPage> {
                 style: TextStyle(color: Colors.black54),
               ),
             ),
-            GestureDetector(
-              onTap: () => _startVoiceSearch(context),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: primaryLightBlue.withOpacity(0.12),
-                  shape: BoxShape.circle,
-                ),
-                padding: const EdgeInsets.all(8),
-                child: Icon(
-                  _isListening ? Icons.mic : Icons.mic_none,
-                  color: primaryDarkBlue,
-                  size: 18,
-                ),
-              ),
-            ),
+            // GestureDetector(
+            //   onTap: () => _startVoiceSearch(context),
+            //   child: Container(
+            //     decoration: BoxDecoration(
+            //       color: primaryLightBlue.withOpacity(0.12),
+            //       shape: BoxShape.circle,
+            //     ),
+            //     padding: const EdgeInsets.all(8),
+            //     child: Icon(
+            //       _isListening ? Icons.mic : Icons.mic_none,
+            //       color: primaryDarkBlue,
+            //       size: 18,
+            //     ),
+            //   ),
+            // ),
           ],
         ),
       ),
     );
   }
 
-  Future<void> _startVoiceSearch(BuildContext context) async {
-    try {
-      final available = await _speech.initialize(
-        onStatus: (status) {
-          // ignore: avoid_print
-          print('SPEECH_STATUS: $status');
-        },
-        onError: (error) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Speech error: ${error.errorMsg}')),
-          );
-        },
-      );
+  // Future<void> _startVoiceSearch(BuildContext context) async {
+  //   try {
+  //     final available = await _speech.initialize(
+  //       onStatus: (status) {
+  //         // ignore: avoid_print
+  //         print('SPEECH_STATUS: $status');
+  //       },
+  //       onError: (error) {
+  //         ScaffoldMessenger.of(context).showSnackBar(
+  //           SnackBar(content: Text('Speech error: ${error.errorMsg}')),
+  //         );
+  //       },
+  //     );
 
-      if (!available) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Speech recognition not available')),
-        );
-        return;
-      }
+  //     if (!available) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(content: Text('Speech recognition not available')),
+  //       );
+  //       return;
+  //     }
 
-      setState(() => _isListening = true);
+  //     setState(() => _isListening = true);
 
-      _speech.listen(
-        onResult: (result) {
-          if (!result.finalResult) return;
-          final text = result.recognizedWords.trim();
-          setState(() {
-            _isListening = false;
-          });
+  //     _speech.listen(
+  //       onResult: (result) {
+  //         if (!result.finalResult) return;
+  //         final text = result.recognizedWords.trim();
+  //         setState(() {
+  //           _isListening = false;
+  //         });
 
-          if (text.isEmpty) return;
+  //         if (text.isEmpty) return;
 
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => CategorySearchPage(initialQuery: text),
-            ),
-          );
-        },
-      );
-    } catch (e) {
-      setState(() => _isListening = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not start voice search: $e')),
-      );
-    }
-  }
+  //         Navigator.of(context).push(
+  //           MaterialPageRoute(
+  //             builder: (_) => CategorySearchPage(initialQuery: text),
+  //           ),
+  //         );
+  //       },
+  //     );
+  //   } catch (e) {
+  //     setState(() => _isListening = false);
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('Could not start voice search: $e')),
+  //     );
+  //   }
+  // }
 
   Widget _buildCategories() {
     return SizedBox(

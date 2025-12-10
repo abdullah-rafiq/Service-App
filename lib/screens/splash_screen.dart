@@ -18,7 +18,7 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
 
     // Short delay then decide where to go based on auth + role
-    Timer(const Duration(seconds: 2), () async {
+    Timer(const Duration(seconds: 0), () async {
       if (!mounted) return;
 
       final auth = FirebaseAuth.instance;

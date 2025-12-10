@@ -62,11 +62,30 @@ class _AuthScreenState extends State<AuthScreen> {
         password: password,
       );
 
-      if (!mounted) return;
       // Simple analytics/logging
       // ignore: avoid_print
       print('LOGIN_EMAIL_SUCCESS user=${cred.user?.uid}');
-      context.go('/role');
+
+      final profile = await AuthService.instance.getCurrentUserProfile();
+
+      if (!mounted) return;
+
+      if (profile == null) {
+        context.go('/role');
+        return;
+      }
+
+      switch (profile.role) {
+        case UserRole.customer:
+          context.go('/home');
+          break;
+        case UserRole.provider:
+          context.go('/worker');
+          break;
+        case UserRole.admin:
+        default:
+          context.go('/role');
+      }
     } on FirebaseAuthException catch (e) {
       String message = 'Login failed';
 
@@ -105,18 +124,37 @@ class _AuthScreenState extends State<AuthScreen> {
       final firebaseUser = userCred.user;
 
       if (firebaseUser != null) {
-        // Ensure there is a Firestore user document; role will be chosen on /role
+        // Ensure there is a Firestore user document if missing (e.g. first Google sign-in)
         await AuthService.instance.ensureUserDocument(
           firebaseUser: firebaseUser,
           role: UserRole.customer,
         );
       }
 
-      if (!mounted) return;
       // Simple analytics/logging
       // ignore: avoid_print
       print('LOGIN_GOOGLE_SUCCESS user=${firebaseUser?.uid}');
-      context.go('/role');
+
+      final profile = await AuthService.instance.getCurrentUserProfile();
+
+      if (!mounted) return;
+
+      if (profile == null) {
+        context.go('/role');
+        return;
+      }
+
+      switch (profile.role) {
+        case UserRole.customer:
+          context.go('/home');
+          break;
+        case UserRole.provider:
+          context.go('/worker');
+          break;
+        case UserRole.admin:
+        default:
+          context.go('/role');
+      }
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.message ?? 'Google sign-in failed')),

@@ -308,6 +308,30 @@ class WorkerJobDetailPage extends StatelessWidget {
   }
 
   Future<void> _handlePrimaryAction(BuildContext context) async {
+    final current = FirebaseAuth.instance.currentUser;
+    if (current == null) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please log in to update job status.')),
+        );
+      }
+      return;
+    }
+
+    final provider = await UserService.instance.getById(current.uid);
+    if (provider == null || !provider.verified) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Your account is not verified yet. Complete verification before accepting or starting jobs.',
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
     String? newStatus;
     switch (booking.status) {
       case BookingStatus.requested:

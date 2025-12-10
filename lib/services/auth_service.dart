@@ -52,5 +52,12 @@ class AuthService {
     );
 
     await userRef.set(appUser.toMap(), SetOptions(merge: true));
+
+    await _db.collection('admin_notifications').add({
+      'type': 'new_user',
+      'userId': firebaseUser.uid,
+      'role': role.name,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
   }
 }

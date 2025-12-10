@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:flutter_application_1/models/app_user.dart';
 import 'package:flutter_application_1/services/user_service.dart';
+import 'package:flutter_application_1/worker/worker_verification_page.dart';
 
 import 'wallet_page.dart';
 import 'my_bookings_page.dart';
@@ -133,10 +134,21 @@ class ProfilePage extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                             onTap: profile.verified
                                 ? null
-                                : () => _startPhoneVerification(
-                                      context,
-                                      profile,
-                                    ),
+                                : () {
+                                    if (profile.role == UserRole.provider) {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const WorkerVerificationPage(),
+                                        ),
+                                      );
+                                    } else {
+                                      _startPhoneVerification(
+                                        context,
+                                        profile,
+                                      );
+                                    }
+                                  },
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               mainAxisAlignment: MainAxisAlignment.center,
