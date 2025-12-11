@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -7,6 +9,7 @@ import 'package:flutter_application_1/models/app_user.dart';
 import 'package:flutter_application_1/services/auth_service.dart';
 
 import 'signup_screen.dart';
+import 'forgot_password_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -70,6 +73,9 @@ class _AuthScreenState extends State<AuthScreen> {
 
       if (!mounted) return;
 
+      // Hide keyboard before navigation to reduce transition jank
+      FocusScope.of(context).unfocus();
+
       if (profile == null) {
         context.go('/role');
         return;
@@ -85,6 +91,7 @@ class _AuthScreenState extends State<AuthScreen> {
         case UserRole.admin:
           context.go('/admin');
           break;
+        // ignore: unreachable_switch_default
         default:
           context.go('/home');
       }
@@ -156,6 +163,7 @@ class _AuthScreenState extends State<AuthScreen> {
         case UserRole.admin:
           context.go('/admin');
           break;
+        // ignore: unreachable_switch_default
         default:
           context.go('/home');
       }
@@ -173,28 +181,11 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Future<void> _forgotPassword() async {
-    final email = _emailController.text.trim();
-
-    if (email.isEmpty || !_isValidEmail(email)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Enter a valid email first to reset password')),
-      );
-      return;
-    }
-
-    try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Password reset email sent. Check your inbox.')),
-      );
-    } catch (_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Could not send reset email. Try again later.')),
-      );
-    }
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const ForgotPasswordScreen(),
+      ),
+    );
   }
 
   @override
@@ -203,7 +194,8 @@ class _AuthScreenState extends State<AuthScreen> {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      // Avoid full layout jump when keyboard opens; we handle insets manually
+      resizeToAvoidBottomInset: false,
 
       /// 🔥 FIXED BACKGROUND
       body: Container(
@@ -225,14 +217,15 @@ class _AuthScreenState extends State<AuthScreen> {
               padding: EdgeInsets.only(
                 left: 28,
                 right: 16,
-                top: 16,
-                bottom: bottomInset + 24,
+                top: 24,
+                bottom: bottomInset > 0 ? bottomInset + 24 : 40,
               ),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.start,
+
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 80),
 
                   const Text(
                     'Welcome Back,',
@@ -265,16 +258,30 @@ class _AuthScreenState extends State<AuthScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.85),
-                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.white.withOpacity(0.80),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.4),
+                      ),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x22000000),
+                          blurRadius: 18,
+                          offset: Offset(0, 10),
+                        ),
+                      ],
                     ),
+
                     child: Column(
                       children: [
                         TextField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
+                          style: const TextStyle(color: Colors.black87),
                           decoration: InputDecoration(
                             labelText: "Email",
+                            labelStyle:
+                                const TextStyle(color: Colors.black54),
                             errorText: _emailError,
                           ),
                           onChanged: (value) {
@@ -295,8 +302,12 @@ class _AuthScreenState extends State<AuthScreen> {
                         TextField(
                           controller: _passwordController,
                           obscureText: true,
+                          textInputAction: TextInputAction.done,
+                          style: const TextStyle(color: Colors.black87),
                           decoration: InputDecoration(
                             labelText: "Password",
+                            labelStyle:
+                                const TextStyle(color: Colors.black54),
                             errorText: _passwordError,
                           ),
                           onChanged: (value) {
@@ -305,6 +316,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                   value.isEmpty ? "Password is required" : null;
                             });
                           },
+                          onSubmitted: (_) => _login(),
                         ),
 
                         const SizedBox(height: 20),

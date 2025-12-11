@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -90,6 +92,7 @@ class WalletPage extends StatelessWidget {
         ),
         title: const Text('Wallet'),
       ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: StreamBuilder<AppUser?>(
         stream: UserService.instance.watchUser(current.uid),
         builder: (context, snapshot) {
@@ -113,13 +116,18 @@ class WalletPage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(18),
-                    boxShadow: const [
+                    border: Border.all(
+                      color:
+                          Theme.of(context).dividerColor.withOpacity(0.4),
+                    ),
+                    boxShadow: [
                       BoxShadow(
-                        color: Color(0x14000000),
-                        blurRadius: 12,
-                        offset: Offset(0, 8),
+                        color:
+                            Theme.of(context).shadowColor.withOpacity(0.08),
+                        blurRadius: 18,
+                        offset: const Offset(0, 10),
                       ),
                     ],
                   ),
@@ -219,13 +227,15 @@ class WalletPage extends StatelessWidget {
                           return Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: Theme.of(context).cardColor,
                               borderRadius: BorderRadius.circular(14),
-                              boxShadow: const [
+                              boxShadow: [
                                 BoxShadow(
-                                  color: Color(0x14000000),
+                                  color: Theme.of(context)
+                                      .shadowColor
+                                      .withOpacity(0.08),
                                   blurRadius: 8,
-                                  offset: Offset(0, 4),
+                                  offset: const Offset(0, 4),
                                 ),
                               ],
                             ),
@@ -251,7 +261,6 @@ class WalletPage extends StatelessWidget {
                                         'Amount: PKR ${b.price.toStringAsFixed(0)}',
                                         style: const TextStyle(
                                           fontSize: 12,
-                                          color: Colors.black54,
                                         ),
                                       ),
                                     ],

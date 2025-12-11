@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +21,7 @@ class NotificationsPage extends StatelessWidget {
         ),
         title: const Text('Notifications'),
       ),
-      backgroundColor: const Color(0xFFF6FBFF),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: current == null
           ? const Center(
               child: Text('Please log in to view notifications.'),
@@ -58,13 +60,14 @@ class NotificationsPage extends StatelessWidget {
                     return Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(16),
-                        boxShadow: const [
+                        boxShadow: [
                           BoxShadow(
-                            color: Color(0x14000000),
+                            color:
+                                Theme.of(context).shadowColor.withOpacity(0.08),
                             blurRadius: 8,
-                            offset: Offset(0, 4),
+                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
@@ -83,7 +86,6 @@ class NotificationsPage extends StatelessWidget {
                             body,
                             style: const TextStyle(
                               fontSize: 13,
-                              color: Colors.black54,
                             ),
                           ),
                         ],

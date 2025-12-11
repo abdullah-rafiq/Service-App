@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 
 class FaqPage extends StatelessWidget {
@@ -43,18 +45,18 @@ class FaqPage extends StatelessWidget {
         ),
         title: const Text('FAQ'),
       ),
-      backgroundColor: const Color(0xFFF6FBFF),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(18),
-            boxShadow: const [
+            boxShadow: [
               BoxShadow(
-                color: Color(0x14000000),
+                color: Theme.of(context).shadowColor.withOpacity(0.08),
                 blurRadius: 12,
-                offset: Offset(0, 8),
+                offset: const Offset(0, 8),
               ),
             ],
           ),

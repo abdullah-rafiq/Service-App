@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -21,10 +23,10 @@ class AdminProfilePage extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6FBFF),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF29B6F6),
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Theme.of(context).primaryColorDark,
         elevation: 4,
         title: const Text('Admin profile'),
       ),
@@ -56,13 +58,15 @@ class AdminProfilePage extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(18),
-                      boxShadow: const [
+                      boxShadow: [
                         BoxShadow(
-                          color: Color(0x14000000),
+                          color: Theme.of(context)
+                              .shadowColor
+                              .withOpacity(0.08),
                           blurRadius: 12,
-                          offset: Offset(0, 8),
+                          offset: const Offset(0, 8),
                         ),
                       ],
                     ),
@@ -81,7 +85,6 @@ class AdminProfilePage extends StatelessWidget {
                           'Role: ${profile.role.name}',
                           style: const TextStyle(
                             fontSize: 13,
-                            color: Colors.black54,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -90,7 +93,6 @@ class AdminProfilePage extends StatelessWidget {
                             profile.email!,
                             style: const TextStyle(
                               fontSize: 13,
-                              color: Colors.black87,
                             ),
                           ),
                       ],

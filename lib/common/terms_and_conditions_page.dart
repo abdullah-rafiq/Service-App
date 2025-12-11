@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 
 class TermsAndConditionsPage extends StatelessWidget {
@@ -5,6 +7,7 @@ class TermsAndConditionsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -15,23 +18,23 @@ class TermsAndConditionsPage extends StatelessWidget {
         ),
         title: const Text('Terms & conditions'),
       ),
-      backgroundColor: const Color(0xFFF6FBFF),
-      body: const Padding(
-        padding: EdgeInsets.all(16.0),
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.all(Radius.circular(18)),
+              color: theme.cardColor,
+              borderRadius: const BorderRadius.all(Radius.circular(18)),
               boxShadow: [
                 BoxShadow(
-                  color: Color(0x14000000),
+                  color: theme.shadowColor.withOpacity(0.08),
                   blurRadius: 12,
-                  offset: Offset(0, 8),
+                  offset: const Offset(0, 8),
                 ),
               ],
             ),
-            child: Padding(
+            child: const Padding(
               padding: EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

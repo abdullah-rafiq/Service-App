@@ -31,6 +31,7 @@ class AppTheme {
         value = 'light';
         break;
       case ThemeMode.system:
+      // ignore: unreachable_switch_default
       default:
         value = 'system';
         break;

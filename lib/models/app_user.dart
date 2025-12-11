@@ -14,6 +14,11 @@ class AppUser {
   final num walletBalance;
   final DateTime? createdAt;
   final DateTime? lastSeen;
+  final String? city;
+  final String? addressLine1;
+  final String? town;
+  final double? locationLat;
+  final double? locationLng;
 
   const AppUser({
     required this.id,
@@ -27,6 +32,11 @@ class AppUser {
     this.walletBalance = 0,
     this.createdAt,
     this.lastSeen,
+    this.city,
+    this.addressLine1,
+    this.town,
+    this.locationLat,
+    this.locationLng,
   });
 
   factory AppUser.fromMap(String id, Map<String, dynamic> data) {
@@ -42,6 +52,11 @@ class AppUser {
       walletBalance: (data['walletBalance'] as num?) ?? 0,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
       lastSeen: (data['lastSeen'] as Timestamp?)?.toDate(),
+      city: data['city'] as String?,
+      addressLine1: data['addressLine1'] as String?,
+      town: data['town'] as String?,
+      locationLat: (data['locationLat'] as num?)?.toDouble(),
+      locationLng: (data['locationLng'] as num?)?.toDouble(),
     );
   }
 
@@ -57,6 +72,11 @@ class AppUser {
       'walletBalance': walletBalance,
       'createdAt': createdAt == null ? null : Timestamp.fromDate(createdAt!),
       'lastSeen': lastSeen == null ? null : Timestamp.fromDate(lastSeen!),
+      'city': city,
+      'addressLine1': addressLine1,
+      'town': town,
+      'locationLat': locationLat,
+      'locationLng': locationLng,
     };
   }
 

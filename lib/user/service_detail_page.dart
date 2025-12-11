@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -17,6 +19,13 @@ class ServiceDetailPage extends StatefulWidget {
 class _ServiceDetailPageState extends State<ServiceDetailPage> {
   DateTime? _selectedDateTime;
   bool _submitting = false;
+  final TextEditingController _notesController = TextEditingController();
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
 
   Future<void> _pickDateTime() async {
     final now = DateTime.now();
@@ -73,6 +82,9 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
         scheduledTime: _selectedDateTime,
         createdAt: DateTime.now(),
         price: widget.service.basePrice,
+        notes: _notesController.text.trim().isEmpty
+            ? null
+            : _notesController.text.trim(),
       );
 
       await BookingService.instance.createBooking(booking);
@@ -104,8 +116,8 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
       appBar: AppBar(
         title: Text(service.name),
       ),
-      backgroundColor: const Color(0xFFF6FBFF),
-      body: Padding(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -113,13 +125,14 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(18),
-                boxShadow: const [
+                boxShadow: [
                   BoxShadow(
-                    color: Color(0x14000000),
+                    color:
+                        Theme.of(context).shadowColor.withOpacity(0.08),
                     blurRadius: 12,
-                    offset: Offset(0, 8),
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
@@ -156,7 +169,7 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
                             const SizedBox(height: 4),
                             const Text(
                               'Home service',
-                              style: TextStyle(color: Colors.black54),
+                              style: TextStyle(),
                             ),
                             const SizedBox(height: 8),
                             Text(
@@ -199,14 +212,18 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'You can add more fields later (address selection, notes, etc.)',
-                    style: TextStyle(color: Colors.black54, fontSize: 13),
+                  TextField(
+                    controller: _notesController,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      hintText: 'Add any special instructions for the provider...',
+                      border: OutlineInputBorder(),
+                    ),
                   ),
                 ],
               ),
             ),
-            const Spacer(),
+            const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(

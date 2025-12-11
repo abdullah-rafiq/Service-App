@@ -1,9 +1,13 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -31,7 +35,7 @@ class ProfilePage extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xffF6FBFF),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: StreamBuilder<AppUser?>(
           stream: UserService.instance.watchUser(current.uid),
@@ -72,13 +76,13 @@ class ProfilePage extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(18),
-                      boxShadow: const [
+                      boxShadow: [
                         BoxShadow(
-                          color: Color(0x14000000),
+                          color: Theme.of(context).shadowColor.withOpacity(0.08),
                           blurRadius: 12,
-                          offset: Offset(0, 8),
+                          offset: const Offset(0, 8),
                         ),
                       ],
                     ),
@@ -95,7 +99,7 @@ class ProfilePage extends StatelessWidget {
                             ),
                             Container(
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: Theme.of(context).cardColor,
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               child: IconButton(
@@ -126,7 +130,6 @@ class ProfilePage extends StatelessWidget {
                             'Role: ${profile.role.name}',
                             style: const TextStyle(
                               fontSize: 13,
-                              color: Colors.black54,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -183,7 +186,6 @@ class ProfilePage extends StatelessWidget {
                               'Wallet: PKR ${profile.walletBalance.toStringAsFixed(0)}',
                               style: const TextStyle(
                                 fontSize: 13,
-                                color: Colors.black87,
                               ),
                             ),
                         ],
@@ -195,13 +197,13 @@ class ProfilePage extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(18),
-                        boxShadow: const [
+                        boxShadow: [
                           BoxShadow(
-                            color: Color(0x14000000),
+                            color: Theme.of(context).shadowColor.withOpacity(0.08),
                             blurRadius: 12,
-                            offset: Offset(0, 8),
+                            offset: const Offset(0, 8),
                           ),
                         ],
                       ),
@@ -332,6 +334,10 @@ class ProfilePage extends StatelessWidget {
 Future<void> _showEditProfileDialog(BuildContext context, AppUser profile) async {
   final nameController = TextEditingController(text: profile.name ?? '');
   final phoneController = TextEditingController(text: profile.phone ?? '');
+  final addressController =
+      TextEditingController(text: profile.addressLine1 ?? '');
+  final townController = TextEditingController(text: profile.town ?? '');
+  String? selectedCity = profile.city;
 
   await showModalBottomSheet<void>(
     context: context,
@@ -341,234 +347,423 @@ Future<void> _showEditProfileDialog(BuildContext context, AppUser profile) async
     ),
     builder: (context) {
       final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-      return Padding(
-        padding: EdgeInsets.only(
-          left: 16,
-          right: 16,
-          top: 16,
-          bottom: bottomInset + 16,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Edit profile',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              top: 16,
+              bottom: bottomInset + 16,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Edit profile',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Update your basic information so providers can recognize you easily.',
-              style: TextStyle(fontSize: 13, color: Colors.black54),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: nameController,
-              textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(
-                labelText: 'Full name',
-                prefixIcon: Icon(Icons.person_outline),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: phoneController,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                labelText: 'Phone number',
-                hintText: '+92 300 1234567',
-                prefixIcon: Icon(Icons.phone_outlined),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Cancel'),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Update your basic information so providers can recognize you easily.',
+                    style: TextStyle(fontSize: 13),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: nameController,
+                    textInputAction: TextInputAction.next,
+                    decoration: const InputDecoration(
+                      labelText: 'Full name',
+                      prefixIcon: Icon(Icons.person_outline),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: phoneController,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      labelText: 'Phone number',
+                      hintText: '+92 300 1234567',
+                      prefixIcon: Icon(Icons.phone_outlined),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    value: selectedCity,
+                    decoration: const InputDecoration(
+                      labelText: 'City',
+                      prefixIcon: Icon(Icons.location_city_outlined),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'Lahore', child: Text('Lahore')),
+                      DropdownMenuItem(value: 'Islamabad', child: Text('Islamabad')),
+                      DropdownMenuItem(value: 'Karachi', child: Text('Karachi')),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        selectedCity = value;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: addressController,
+                    textInputAction: TextInputAction.next,
+                    decoration: const InputDecoration(
+                      labelText: 'House no. / Street (address line 1)',
+                      prefixIcon: Icon(Icons.home_outlined),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: townController,
+                    decoration: const InputDecoration(
+                      labelText: 'Town / Area',
+                      prefixIcon: Icon(Icons.map_outlined),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton.icon(
                     onPressed: () async {
-                      final name = nameController.text.trim();
-                      final phone = phoneController.text.trim();
+                      try {
+                        final serviceEnabled =
+                            await Geolocator.isLocationServiceEnabled();
+                        if (!serviceEnabled) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                  'Please enable location services to use this feature.'),
+                            ),
+                          );
+                          return;
+                        }
 
-                      if (name.isEmpty) {
+                        var permission = await Geolocator.checkPermission();
+                        if (permission == LocationPermission.denied) {
+                          permission = await Geolocator.requestPermission();
+                        }
+
+                        if (permission == LocationPermission.denied ||
+                            permission == LocationPermission.deniedForever) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                  'Location permission denied. Please enable it in settings.'),
+                            ),
+                          );
+                          return;
+                        }
+
+                        final position = await Geolocator.getCurrentPosition(
+                          desiredAccuracy: LocationAccuracy.high,
+                        );
+
+                        String? city;
+                        String? town;
+                        String? addressLine1;
+                        try {
+                          final placemarks = await placemarkFromCoordinates(
+                            position.latitude,
+                            position.longitude,
+                          );
+
+                          if (placemarks.isNotEmpty) {
+                            final p = placemarks.first;
+
+                            city = p.locality ??
+                                p.subAdministrativeArea ??
+                                p.administrativeArea;
+                            town = p.subLocality ?? p.locality;
+
+                            addressLine1 = p.street;
+                            if (addressLine1 == null ||
+                                addressLine1.trim().isEmpty) {
+                              addressLine1 = p.name;
+                            }
+
+                            final lowerCity = city?.toLowerCase() ?? '';
+                            if (lowerCity.contains('lahore')) {
+                              city = 'Lahore';
+                            } else if (lowerCity.contains('islamabad')) {
+                              city = 'Islamabad';
+                            } else if (lowerCity.contains('karachi')) {
+                              city = 'Karachi';
+                            }
+                          }
+                        } catch (_) {
+                          // Ignore reverse geocoding failures; still save raw location.
+                        }
+
+                        final update = <String, dynamic>{
+                          'locationLat': position.latitude,
+                          'locationLng': position.longitude,
+                        };
+
+                        if (city != null && city.isNotEmpty) {
+                          update['city'] = city;
+                        }
+
+                        if (town != null && town.isNotEmpty) {
+                          update['town'] = town;
+                        }
+
+                        if (addressLine1 != null &&
+                            addressLine1.trim().isNotEmpty) {
+                          update['addressLine1'] = addressLine1;
+                        }
+
+                        await UserService.instance.updateUser(profile.id, update);
+
+                        setState(() {
+                          if (city != null && city.isNotEmpty) {
+                            if (city == 'Lahore' ||
+                                city == 'Islamabad' ||
+                                city == 'Karachi') {
+                              selectedCity = city;
+                            }
+                          }
+
+                          if (town != null && town.isNotEmpty) {
+                            townController.text = town;
+                          }
+
+                          if (addressLine1 != null &&
+                              addressLine1.trim().isNotEmpty) {
+                            addressController.text = addressLine1;
+                          }
+                        });
+
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                  'Location and city/town updated from your current position.'),
+                            ),
+                          );
+                        }
+                      } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Name cannot be empty.')),
+                          SnackBar(
+                            content: Text('Could not fetch location: $e'),
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.my_location),
+                    label: const Text('Use current location'),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Cancel'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            final name = nameController.text.trim();
+                            final phone = phoneController.text.trim();
+
+                            if (name.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('Name cannot be empty.')),
+                              );
+                              return;
+                            }
+
+                            try {
+                              final address = addressController.text.trim();
+                              final town = townController.text.trim();
+
+                              await UserService.instance.updateUser(profile.id, {
+                                'name': name,
+                                'phone': phone.isEmpty ? null : phone,
+                                'city': selectedCity,
+                                'addressLine1':
+                                    address.isEmpty ? null : address,
+                                'town': town.isEmpty ? null : town,
+                              });
+
+                              Navigator.of(context).pop();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content:
+                                      Text('Profile updated successfully.'),
+                                ),
+                              );
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content:
+                                      Text('Failed to update profile: $e'),
+                                ),
+                              );
+                            }
+                          },
+                          child: const Text('Save changes'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  ListTile(
+                    leading: const Icon(Icons.lock_reset),
+                    title: const Text('Change password'),
+                    subtitle:
+                        const Text('Send a password reset link to your email.'),
+                    onTap: () async {
+                      final user = FirebaseAuth.instance.currentUser;
+                      final email = user?.email;
+
+                      if (email == null || email.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'No email found for this account. You may be using a social login.',
+                            ),
+                          ),
                         );
                         return;
                       }
 
                       try {
-                        await UserService.instance.updateUser(profile.id, {
-                          'name': name,
-                          'phone': phone.isEmpty ? null : phone,
-                        });
-
-                        Navigator.of(context).pop();
+                        await FirebaseAuth.instance
+                            .sendPasswordResetEmail(email: email);
+                        if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Profile updated successfully.'),
+                            content: Text(
+                              'Password reset email sent. Please check your inbox.',
+                            ),
                           ),
                         );
                       } catch (e) {
+                        if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Failed to update profile: $e'),
+                            content: Text(
+                              'Could not send reset email: $e',
+                            ),
                           ),
                         );
                       }
                     },
-                    child: const Text('Save changes'),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: const Icon(Icons.lock_reset),
-              title: const Text('Change password'),
-              subtitle: const Text('Send a password reset link to your email.'),
-              onTap: () async {
-                final user = FirebaseAuth.instance.currentUser;
-                final email = user?.email;
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.delete_outline,
+                      color: Colors.redAccent,
+                    ),
+                    title: const Text('Delete account'),
+                    subtitle: const Text(
+                        'Permanently remove your account and data.'),
+                    onTap: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: const Text('Delete account'),
+                            content: const Text(
+                              'This will permanently delete your account and data. This action cannot be undone.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(false),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(true),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Colors.redAccent,
+                                ),
+                                child: const Text('Delete'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
 
-                if (email == null || email.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'No email found for this account. You may be using a social login.',
-                      ),
-                    ),
-                  );
-                  return;
-                }
+                      if (confirm != true) return;
 
-                try {
-                  await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Password reset email sent. Please check your inbox.',
-                      ),
-                    ),
-                  );
-                } catch (e) {
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Could not send reset email: $e',
-                      ),
-                    ),
-                  );
-                }
-              },
-            ),
-            const Divider(height: 1),
-            ListTile(
-              leading: const Icon(
-                Icons.delete_outline,
-                color: Colors.redAccent,
-              ),
-              title: const Text('Delete account'),
-              subtitle: const Text('Permanently remove your account and data.'),
-              onTap: () async {
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: const Text('Delete account'),
-                      content: const Text(
-                        'This will permanently delete your account and data. This action cannot be undone.',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(false),
-                          child: const Text('Cancel'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(true),
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.redAccent,
+                      final user = FirebaseAuth.instance.currentUser;
+                      if (user == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'You must be logged in to delete account.',
+                            ),
                           ),
-                          child: const Text('Delete'),
-                        ),
-                      ],
-                    );
-                  },
-                );
+                        );
+                        return;
+                      }
 
-                if (confirm != true) return;
+                      try {
+                        final uid = user.uid;
+                        await FirebaseFirestore.instance
+                            .collection('users')
+                            .doc(uid)
+                            .delete();
 
-                final user = FirebaseAuth.instance.currentUser;
-                if (user == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('You must be logged in to delete account.'),
-                    ),
-                  );
-                  return;
-                }
+                        await user.delete();
 
-                try {
-                  final uid = user.uid;
-                  await FirebaseFirestore.instance
-                      .collection('users')
-                      .doc(uid)
-                      .delete();
-
-                  await user.delete();
-
-                  if (!context.mounted) return;
-                  Navigator.of(context).pop();
-                  Navigator.of(context).pop();
-                } on FirebaseAuthException catch (e) {
-                  if (!context.mounted) return;
-                  if (e.code == 'requires-recent-login') {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Please log in again and then try deleting your account.',
-                        ),
-                      ),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Could not delete account: ${e.code}'),
-                      ),
-                    );
-                  }
-                } catch (e) {
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Could not delete account: $e'),
-                    ),
-                  );
-                }
-              },
+                        if (!context.mounted) return;
+                        Navigator.of(context).pop();
+                        Navigator.of(context).pop();
+                      } on FirebaseAuthException catch (e) {
+                        if (!context.mounted) return;
+                        if (e.code == 'requires-recent-login') {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Please log in again and then try deleting your account.',
+                              ),
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                  'Could not delete account: ${e.code}'),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Could not delete account: $e'),
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+          );
+        },
       );
     },
   );
@@ -791,6 +986,7 @@ Future<void> _changeProfileImage(BuildContext context, String uid) async {
         .child('profile_images')
         .child('$uid.jpg');
 
+    // ignore: unused_local_variable
     final uploadTask = await storageRef.putFile(file);
     final downloadUrl = await storageRef.getDownloadURL();
 

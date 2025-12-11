@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -20,12 +22,117 @@ class _CategorySearchPageState extends State<CategorySearchPage> {
   String _query = '';
   late final TextEditingController _controller;
   String _serviceSort = 'relevance'; // relevance, price_asc, price_desc
+  bool _showCategories = true;
+  bool _showServices = true;
 
   @override
   void initState() {
     super.initState();
     _query = widget.initialQuery?.trim().toLowerCase() ?? '';
     _controller = TextEditingController(text: widget.initialQuery ?? '');
+  }
+
+  void _openFilterSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        String tempSort = _serviceSort;
+        bool tempShowCategories = _showCategories;
+        bool tempShowServices = _showServices;
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Filters',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Sort by price:',
+                    style: TextStyle(fontSize: 13),
+                  ),
+                  const SizedBox(height: 8),
+                  RadioListTile<String>(
+                    title: const Text('Price: Low to High'),
+                    value: 'price_asc',
+                    groupValue: tempSort,
+                    onChanged: (value) {
+                      if (value == null) return;
+                      setModalState(() => tempSort = value);
+                    },
+                  ),
+                  RadioListTile<String>(
+                    title: const Text('Price: High to Low'),
+                    value: 'price_desc',
+                    groupValue: tempSort,
+                    onChanged: (value) {
+                      if (value == null) return;
+                      setModalState(() => tempSort = value);
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Show results from:',
+                    style: TextStyle(fontSize: 13),
+                  ),
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Categories'),
+                    value: tempShowCategories,
+                    onChanged: (value) {
+                      if (value == null) return;
+                      setModalState(() => tempShowCategories = value);
+                    },
+                  ),
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Services'),
+                    value: tempShowServices,
+                    onChanged: (value) {
+                      if (value == null) return;
+                      setModalState(() => tempShowServices = value);
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Cancel'),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _serviceSort = tempSort;
+                            _showCategories = tempShowCategories;
+                            _showServices = tempShowServices;
+                          });
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text('Apply'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -38,17 +145,21 @@ class _CategorySearchPageState extends State<CategorySearchPage> {
         ),
         title: const Text('Search services'),
       ),
-      backgroundColor: const Color(0xFFF6FBFF),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
               controller: _controller,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Search services or categories...',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.search),
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.filter_list),
+                  onPressed: _openFilterSheet,
+                ),
               ),
               onChanged: (value) {
                 setState(() {
@@ -103,8 +214,8 @@ class _CategorySearchPageState extends State<CategorySearchPage> {
                       services.sort((a, b) => b.basePrice.compareTo(a.basePrice));
                     }
 
-                    final hasCategories = categories.isNotEmpty;
-                    final hasServices = services.isNotEmpty;
+                    final hasCategories = _showCategories && categories.isNotEmpty;
+                    final hasServices = _showServices && services.isNotEmpty;
 
                     if (!hasCategories && !hasServices) {
                       return const Center(
@@ -222,7 +333,6 @@ class _CategorySearchPageState extends State<CategorySearchPage> {
                                     'From PKR ${svc.basePrice.toStringAsFixed(0)}',
                                     style: const TextStyle(
                                       fontSize: 12,
-                                      color: Colors.black54,
                                     ),
                                   ),
                                   trailing: const Icon(Icons.chevron_right),
@@ -253,3 +363,4 @@ class _CategorySearchPageState extends State<CategorySearchPage> {
     );
   }
 }
+

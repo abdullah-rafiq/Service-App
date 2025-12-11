@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 
 class ContactUsPage extends StatefulWidget {
@@ -75,7 +77,7 @@ class _ContactUsPageState extends State<ContactUsPage> {
       appBar: AppBar(
         title: const Text('Contact us'),
       ),
-      backgroundColor: const Color(0xFFF6FBFF),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
           Expanded(
@@ -84,13 +86,14 @@ class _ContactUsPageState extends State<ContactUsPage> {
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(18),
-                    boxShadow: const [
+                    boxShadow: [
                       BoxShadow(
-                        color: Color(0x14000000),
+                        color:
+                            Theme.of(context).shadowColor.withOpacity(0.08),
                         blurRadius: 12,
-                        offset: Offset(0, 8),
+                        offset: const Offset(0, 8),
                       ),
                     ],
                   ),
@@ -136,13 +139,14 @@ class _ContactUsPageState extends State<ContactUsPage> {
                 const SizedBox(height: 16),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(18),
-                    boxShadow: const [
+                    boxShadow: [
                       BoxShadow(
-                        color: Color(0x14000000),
+                        color:
+                            Theme.of(context).shadowColor.withOpacity(0.08),
                         blurRadius: 12,
-                        offset: Offset(0, 8),
+                        offset: const Offset(0, 8),
                       ),
                     ],
                   ),
@@ -164,7 +168,11 @@ class _ContactUsPageState extends State<ContactUsPage> {
                             horizontal: 12, vertical: 4),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.shade300),
+                          border: Border.all(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .outlineVariant,
+                          ),
                         ),
                         child: Column(
                           children: [
@@ -179,10 +187,14 @@ class _ContactUsPageState extends State<ContactUsPage> {
                                       : Alignment.centerLeft;
                                   final color = message.fromUser
                                       ? Theme.of(context).colorScheme.primary
-                                      : Colors.grey.shade200;
+                                      : Theme.of(context)
+                                          .colorScheme
+                                          .surfaceContainerHighest;
                                   final textColor = message.fromUser
                                       ? Colors.white
-                                      : Colors.black87;
+                                      : Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant;
 
                                   return Align(
                                     alignment: alignment,

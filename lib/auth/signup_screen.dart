@@ -1,5 +1,8 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -9,15 +12,18 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  String? _nameError;
   String? _emailError;
   String? _passwordError;
   String? _confirmPasswordError;
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -39,18 +45,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   Future<void> _signUp() async {
+    final name = _nameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
     final confirmPassword = _confirmPasswordController.text.trim();
 
     setState(() {
+      _nameError = null;
       _emailError = null;
       _passwordError = null;
       _confirmPasswordError = null;
     });
 
-    if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+    if (name.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
       setState(() {
+        if (name.isEmpty) _nameError = 'Name is required';
         if (email.isEmpty) _emailError = 'Email is required';
         if (password.isEmpty) _passwordError = 'Password is required';
         if (confirmPassword.isEmpty) {
@@ -69,8 +78,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     if (!_isStrongPassword(password)) {
       setState(() {
-        _passwordError =
-            'Password does not meet the required strength criteria';
+        _passwordError = 'Password does not meet the required strength criteria';
       });
       return;
     }
@@ -88,10 +96,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
         password: password,
       );
 
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Account created. Please log in.')),
-      );
+      final current = FirebaseAuth.instance.currentUser;
+      if (current != null && name.isNotEmpty) {
+        await current.updateDisplayName(name);
+      }
+
+      if (!mounted) return;
+
+      context.go('/role');
+
     } on FirebaseAuthException catch (e) {
       String message = 'Sign up failed';
       if (e.code == 'email-already-in-use') {
@@ -115,6 +128,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color(0xFF29B6F6),
+        foregroundColor: Colors.white,
+        elevation: 0,
         title: const Text('Create account'),
       ),
       body: SafeArea(
@@ -131,37 +147,77 @@ class _SignUpScreenState extends State<SignUpScreen> {
             color: const Color.fromARGB(115, 0, 213, 255),
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x14000000),
-                      blurRadius: 12,
-                      offset: Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 8),
-                    const Center(
-                      child: Text(
-                        'Sign up',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+                  Center(
+                    child: Text(
+                      'Sign up',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    TextField(
+                  ),
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.80),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.4),
+                      ),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x22000000),
+                          blurRadius: 18,
+                          offset: Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: _nameController,
+                      textInputAction: TextInputAction.next,
+                      style: const TextStyle(color: Colors.black87),
+                      onChanged: (value) {
+                        setState(() {
+                          _nameError =
+                              value.trim().isEmpty ? 'Name is required' : null;
+                        });
+                      },
+                      decoration: InputDecoration(
+                        labelText: 'Full name',
+                        labelStyle: const TextStyle(color: Colors.black54),
+                        border: const OutlineInputBorder(),
+                        errorText: _nameError,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.80),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.4),
+                      ),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x22000000),
+                          blurRadius: 18,
+                          offset: Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
+                      style: const TextStyle(color: Colors.black87),
                       onChanged: (value) {
                         setState(() {
                           if (value.isEmpty) {
@@ -175,132 +231,180 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       },
                       decoration: InputDecoration(
                         labelText: 'Email',
+                        labelStyle: const TextStyle(color: Colors.black54),
                         border: const OutlineInputBorder(),
                         errorText: _emailError,
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _passwordController,
-                      obscureText: true,
-                      onChanged: (value) {
-                        setState(() {
-                          if (value.isEmpty) {
-                            _passwordError = 'Password is required';
-                          } else if (!_isStrongPassword(value.trim())) {
-                            _passwordError =
-                                'Password does not meet the required strength criteria';
-                          } else {
-                            _passwordError = null;
-                          }
-
-                          if (_confirmPasswordController.text.isNotEmpty) {
-                            if (_confirmPasswordController.text.trim() !=
-                                value.trim()) {
-                              _confirmPasswordError = 'Passwords do not match';
-                            } else {
-                              _confirmPasswordError = null;
-                            }
-                          }
-                        });
-                      },
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        border: const OutlineInputBorder(),
-                        errorText: _passwordError,
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.80),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.4),
                       ),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x22000000),
+                          blurRadius: 18,
+                          offset: Offset(0, 10),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Password requirements:',
-                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                    ),
-                    const SizedBox(height: 4),
-                    Builder(
-                      builder: (context) {
-                        final text = _passwordController.text;
-                        final hasMinLength = text.length >= 8;
-                        final hasUppercase = text.contains(RegExp(r'[A-Z]'));
-                        final hasLowercase = text.contains(RegExp(r'[a-z]'));
-                        final hasDigit = text.contains(RegExp(r'[0-9]'));
-                        final hasSpecial =
-                            text.contains(RegExp(r'[!@#\$%^&*(),.?":{}|<>]'));
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextField(
+                          controller: _passwordController,
+                          obscureText: true,
+                          style: const TextStyle(color: Colors.black87),
+                          onChanged: (value) {
+                            setState(() {
+                              if (value.isEmpty) {
+                                _passwordError = 'Password is required';
+                              } else if (!_isStrongPassword(value.trim())) {
+                                _passwordError =
+                                    'Password does not meet the required strength criteria';
+                              } else {
+                                _passwordError = null;
+                              }
 
-                        Color colorFor(bool condition) =>
-                            condition ? Colors.green : Colors.red;
+                              if (_confirmPasswordController.text.isNotEmpty) {
+                                if (_confirmPasswordController.text.trim() !=
+                                    value.trim()) {
+                                  _confirmPasswordError = 'Passwords do not match';
+                                } else {
+                                  _confirmPasswordError = null;
+                                }
+                              }
+                            });
+                          },
+                          decoration: InputDecoration(
+                            labelText: 'Password',
+                            labelStyle: const TextStyle(color: Colors.black54),
+                            border: const OutlineInputBorder(),
+                            errorText: _passwordError,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Password requirements:',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w600, fontSize: 13),
+                        ),
+                        const SizedBox(height: 4),
+                        Builder(
+                          builder: (context) {
+                            final text = _passwordController.text;
+                            final hasMinLength = text.length >= 8;
+                            final hasUppercase =
+                                text.contains(RegExp(r'[A-Z]'));
+                            final hasLowercase =
+                                text.contains(RegExp(r'[a-z]'));
+                            final hasDigit =
+                                text.contains(RegExp(r'[0-9]'));
+                            final hasSpecial = text
+                                .contains(RegExp(r'[!@#\$%^&*(),.?":{}|<>]'));
 
-                        Icon iconFor(bool condition) => Icon(
-                              condition ? Icons.check : Icons.close,
-                              size: 16,
-                              color: colorFor(condition),
+                            Color colorFor(bool condition) =>
+                                condition ? Colors.green : Colors.red;
+
+                            Icon iconFor(bool condition) => Icon(
+                                  condition ? Icons.check : Icons.close,
+                                  size: 16,
+                                  color: colorFor(condition),
+                                );
+
+                            TextStyle styleFor(bool condition) => TextStyle(
+                                  fontSize: 12,
+                                  color: colorFor(condition),
+                                );
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    iconFor(hasMinLength),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'At least 8 characters',
+                                      style: styleFor(hasMinLength),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    iconFor(hasUppercase),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'At least one uppercase letter',
+                                      style: styleFor(hasUppercase),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    iconFor(hasLowercase),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'At least one lowercase letter',
+                                      style: styleFor(hasLowercase),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    iconFor(hasDigit),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'At least one number',
+                                      style: styleFor(hasDigit),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    iconFor(hasSpecial),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'At least one special character',
+                                      style: styleFor(hasSpecial),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             );
-
-                        TextStyle styleFor(bool condition) => TextStyle(
-                              fontSize: 12,
-                              color: colorFor(condition),
-                            );
-
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                iconFor(hasMinLength),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'At least 8 characters',
-                                  style: styleFor(hasMinLength),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                iconFor(hasUppercase),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'At least one uppercase letter',
-                                  style: styleFor(hasUppercase),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                iconFor(hasLowercase),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'At least one lowercase letter',
-                                  style: styleFor(hasLowercase),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                iconFor(hasDigit),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'At least one number',
-                                  style: styleFor(hasDigit),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                iconFor(hasSpecial),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'At least one special character',
-                                  style: styleFor(hasSpecial),
-                                ),
-                              ],
-                            ),
-                          ],
-                        );
-                      },
+                          },
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 16),
-                    TextField(
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.80),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.4),
+                      ),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x22000000),
+                          blurRadius: 18,
+                          offset: Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
                       controller: _confirmPasswordController,
                       obscureText: true,
+                      textInputAction: TextInputAction.done,
+                      style: const TextStyle(color: Colors.black87),
                       onChanged: (value) {
                         setState(() {
                           if (value.isEmpty) {
@@ -314,35 +418,38 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           }
                         });
                       },
+                      onSubmitted: (_) => _signUp(),
                       decoration: InputDecoration(
                         labelText: 'Confirm password',
+                        labelStyle: const TextStyle(color: Colors.black54),
                         border: const OutlineInputBorder(),
                         errorText: _confirmPasswordError,
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _signUp,
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          backgroundColor: const Color(0xFF29B6F6),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _signUp,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: const Color(0xFF29B6F6),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Text(
-                          'Create account',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      ),
+                      child: Text(
+                        'Create account',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white.withOpacity(0.9),
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),

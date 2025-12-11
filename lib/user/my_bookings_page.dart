@@ -1,6 +1,7 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:flutter_application_1/models/booking.dart';
 import 'package:flutter_application_1/models/service.dart';
@@ -26,12 +27,7 @@ class MyBookingsPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
+        automaticallyImplyLeading: Navigator.of(context).canPop(),
         title: const Text('My Bookings'),
       ),
       body: StreamBuilder<List<BookingModel>>(
@@ -49,53 +45,6 @@ class MyBookingsPage extends StatelessWidget {
 
           final bookings = snapshot.data ?? [];
 
-          if (bookings.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.event_busy,
-                    size: 64,
-                    color: Colors.black26,
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'No bookings yet',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'When you book a service, it will appear here.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.black54,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      context.go('/home');
-                    },
-                    icon: const Icon(Icons.home_outlined),
-                    label: const Text('Browse services'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF29B6F6),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-
           Color statusColor(String status) {
             switch (status) {
               case BookingStatus.completed:
@@ -104,140 +53,225 @@ class MyBookingsPage extends StatelessWidget {
                 return Colors.redAccent;
               case BookingStatus.inProgress:
               case BookingStatus.onTheWay:
+              case BookingStatus.accepted:
                 return Colors.orange;
+              case BookingStatus.requested:
               default:
                 return Colors.blueGrey;
             }
           }
 
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemBuilder: (context, index) {
-              final b = bookings[index];
-              return Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x14000000),
-                      blurRadius: 8,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(16),
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => BookingDetailPage(booking: b),
-                      ),
-                    );
-                  },
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.cleaning_services_rounded,
-                        color: Colors.blueAccent,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: FutureBuilder<ServiceModel?>(
-                          future: ServiceCatalogService.instance
-                              .getService(b.serviceId),
-                          builder: (context, serviceSnap) {
-                            final service = serviceSnap.data;
-                            final serviceName = service?.name ?? 'Service';
+          String statusLabel(String status) {
+            switch (status) {
+              case BookingStatus.completed:
+                return 'Completed';
+              case BookingStatus.cancelled:
+                return 'Cancelled';
+              case BookingStatus.inProgress:
+                return 'In progress';
+              case BookingStatus.onTheWay:
+                return 'On the way';
+              case BookingStatus.accepted:
+                return 'Scheduled';
+              case BookingStatus.requested:
+              default:
+                return 'Requested';
+            }
+          }
 
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  serviceName,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                  ),
+          Widget buildBookingTile(BookingModel b) {
+            return Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Theme.of(context).shadowColor.withOpacity(0.08),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => BookingDetailPage(booking: b),
+                    ),
+                  );
+                },
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.cleaning_services_rounded,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FutureBuilder<ServiceModel?>(
+                        future: ServiceCatalogService.instance
+                            .getService(b.serviceId),
+                        builder: (context, serviceSnap) {
+                          final service = serviceSnap.data;
+                          final serviceName = service?.name ?? 'Service';
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                serviceName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  b.scheduledTime == null
-                                      ? 'Time: not set'
-                                      : 'Time: ${_formatDateTime(b.scheduledTime)}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.black54,
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: statusColor(b.status).withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              b.status,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: statusColor(b.status),
                               ),
+                              const SizedBox(height: 4),
+                              Text(
+                                b.scheduledTime == null
+                                    ? 'Time: not set'
+                                    : 'Time: ${_formatDateTime(b.scheduledTime)}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: statusColor(b.status).withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            statusLabel(b.status),
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: statusColor(b.status),
                             ),
                           ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'PKR ${b.price.toStringAsFixed(0)}',
-                            style: const TextStyle(
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'PKR ${b.price.toStringAsFixed(0)}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        if (b.paymentStatus == PaymentStatus.pending)
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => PaymentPage(booking: b),
+                                ),
+                              );
+                            },
+                            child: const Text('Pay now'),
+                          )
+                        else
+                          const Text(
+                            'Paid',
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontSize: 12,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          if (b.paymentStatus == PaymentStatus.pending)
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => PaymentPage(booking: b),
-                                  ),
-                                );
-                              },
-                              child: const Text('Pay now'),
-                            )
-                          else
-                            const Text(
-                              'Paid',
-                              style: TextStyle(
-                                color: Colors.green,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          final statusOrder = [
+            BookingStatus.requested,
+            BookingStatus.accepted,
+            BookingStatus.onTheWay,
+            BookingStatus.inProgress,
+            BookingStatus.completed,
+            BookingStatus.cancelled,
+          ];
+
+          final statusLabels = [
+            'Requested',
+            'Scheduled',
+            'On the way',
+            'In progress',
+            'Completed',
+            'Cancelled',
+          ];
+
+          return DefaultTabController(
+            length: statusOrder.length,
+            child: Column(
+              children: [
+                TabBar(
+                  isScrollable: true,
+                  tabs: [
+                    for (int i = 0; i < statusOrder.length; i++)
+                      Tab(
+                        child: Text(
+                          statusLabels[i],
+                          style: TextStyle(
+                            color: statusColor(statusOrder[i]),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                        ),
                       ),
+                  ],
+                ),
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      for (final status in statusOrder)
+                        Builder(
+                          builder: (context) {
+                            final filtered = bookings
+                                .where((b) => b.status == status)
+                                .toList();
+                            if (filtered.isEmpty) {
+                              return Center(
+                                child: Text(
+                                  'No ${statusLabel(status).toLowerCase()} bookings yet.',
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                              );
+                            }
+
+                            return ListView.separated(
+                              padding: const EdgeInsets.all(16),
+                              itemCount: filtered.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 12),
+                              itemBuilder: (context, index) =>
+                                  buildBookingTile(filtered[index]),
+                            );
+                          },
+                        ),
                     ],
                   ),
                 ),
-              );
-            },
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemCount: bookings.length,
+              ],
+            ),
           );
         },
       ),
-      backgroundColor: const Color(0xFFF6FBFF),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
     );
   }
 }
@@ -251,3 +285,4 @@ String _formatDateTime(DateTime? dt) {
   final time = '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
   return '$date • $time';
 }
+

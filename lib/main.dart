@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_application_1/auth/login_screen.dart';
 import 'firebase_options.dart';
 import 'splash screen/splash_screen.dart';
-import 'auth/login_screen.dart';
 import 'auth/role_selection_screen.dart';
-import 'user/main_page.dart';
 import 'common/profile_page.dart';
 import 'user/my_bookings_page.dart';
 import 'common/settings_screen.dart';
@@ -14,8 +13,6 @@ import 'common/faq_page.dart';
 import 'common/contact_us_page.dart';
 import 'common/terms_and_conditions_page.dart';
 import 'common/privacy_policy_page.dart';
-import 'worker/worker_main_page.dart';
-import 'admin/admin_main_page.dart';
 import 'common/role_home_page.dart';
 import 'theme_mode_notifier.dart';
 import 'app_locale.dart';
@@ -127,15 +124,31 @@ class MainApp extends StatelessWidget {
                 GlobalCupertinoLocalizations.delegate,
               ],
               theme: ThemeData(
-                primarySwatch: Colors.blue,
+                colorScheme: ColorScheme.fromSeed(
+                  seedColor: Colors.blue,
+                  brightness: Brightness.light,
+                ),
                 scaffoldBackgroundColor: const Color(0xFFF6FBFF),
+                appBarTheme: const AppBarTheme(
+                  elevation: 4,
+                  backgroundColor: Color(0xFF29B6F6),
+                  foregroundColor: Colors.white,
+                ),
+                cardColor: Colors.white,
               ),
               darkTheme: ThemeData(
-                brightness: Brightness.dark,
                 colorScheme: ColorScheme.fromSeed(
                   seedColor: Colors.blue,
                   brightness: Brightness.dark,
                 ),
+                scaffoldBackgroundColor: const Color(0xFF121212),
+                appBarTheme: AppBarTheme(
+                  elevation: 4,
+                  backgroundColor:
+                      ColorScheme.fromSeed(seedColor: Colors.blue, brightness: Brightness.dark).primary,
+                  foregroundColor: Colors.white,
+                ),
+                cardColor: const Color(0xFF1E1E1E),
               ),
               routerConfig: _router,
             );

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_application_1/user/main_page.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_application_1/models/app_user.dart';
 import 'package:flutter_application_1/services/auth_service.dart';
-import 'package:flutter_application_1/worker/worker_home_screen.dart';
 
 class RoleSelectionScreen extends StatelessWidget {
   const RoleSelectionScreen({super.key});
@@ -75,16 +74,36 @@ class RoleSelectionScreen extends StatelessWidget {
                         child: ElevatedButton(
                           onPressed: () async {
                             final user = FirebaseAuth.instance.currentUser;
-                            if (user != null) {
+                            if (user == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'No logged-in user found. Please log in again.',
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
+
+                            try {
                               await AuthService.instance.ensureUserDocument(
                                 firebaseUser: user,
                                 role: UserRole.customer,
                               );
-                            }
 
-                            Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(builder: (_) => const MainPage()),
-                            );
+                              if (!context.mounted) return;
+
+                              context.go('/home');
+                            } catch (e) {
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Failed to save your profile: $e',
+                                  ),
+                                ),
+                              );
+                            }
                           },
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14.0),
@@ -95,7 +114,10 @@ class RoleSelectionScreen extends StatelessWidget {
                           ),
                           child: const Text(
                             'I need home services',
-                            style: TextStyle(fontSize: 16),
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
@@ -105,21 +127,40 @@ class RoleSelectionScreen extends StatelessWidget {
                         child: OutlinedButton(
                           onPressed: () async {
                             final user = FirebaseAuth.instance.currentUser;
-                            if (user != null) {
+                            if (user == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'No logged-in user found. Please log in again.',
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
+
+                            try {
                               await AuthService.instance.ensureUserDocument(
                                 firebaseUser: user,
                                 role: UserRole.provider,
                               );
-                            }
 
-                            Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(
-                                builder: (_) => const WorkerHomeScreen(),
-                              ),
-                            );
+                              if (!context.mounted) return;
+
+                              context.go('/worker');
+                            } catch (e) {
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Failed to save your profile: $e',
+                                  ),
+                                ),
+                              );
+                            }
                           },
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14.0),
+                            foregroundColor: const Color(0xFF29B6F6),
                             side: const BorderSide(color: Color(0xFF29B6F6)),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),

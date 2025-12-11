@@ -31,6 +31,9 @@ dependencies:
   shared_preferences: ^2.2.2
   url_launcher: ^6.3.0
   path_provider: ^2.1.5
+  geolocator: ^12.0.0
+  geocoding: ^2.1.0
+  speech_to_text: ^7.3.0
 
 dev_dependencies:
   flutter_test:
@@ -39,11 +42,19 @@ dev_dependencies:
   flutter_launcher_icons: ^0.13.1
   build_runner: ^2.0.4
   json_serializable: ^6.6.1
+  flutter_native_splash: ^2.4.0
 
 flutter_icons:
   android: "launcher_icon"
   ios: true
   image_path: "assets/icons/icon.png"
+
+flutter_native_splash:
+  color: "#4FC3F7"
+  image: assets/icons/icon.png
+  android_12:
+    color: "#4FC3F7"
+    image: assets/icons/icon.png
 
 flutter:
   uses-material-design: true
@@ -52,3 +63,4 @@ flutter:
     - assets/icons/
     - assets/login_main.jpg
     - assets/categories/
+    - assets/carsoual/

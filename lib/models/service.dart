@@ -10,6 +10,7 @@ class ServiceModel {
   final List<String> images;
   final bool isActive;
   final DateTime? createdAt;
+  final String? providerId;
 
   const ServiceModel({
     required this.id,
@@ -21,6 +22,7 @@ class ServiceModel {
     this.images = const [],
     this.isActive = true,
     this.createdAt,
+    this.providerId,
   });
 
   factory ServiceModel.fromMap(String id, Map<String, dynamic> data) {
@@ -34,6 +36,7 @@ class ServiceModel {
       images: (data['images'] as List?)?.cast<String>() ?? const [],
       isActive: (data['isActive'] as bool?) ?? true,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
+      providerId: data['providerId'] as String?,
     );
   }
 
@@ -47,6 +50,7 @@ class ServiceModel {
       'images': images,
       'isActive': isActive,
       'createdAt': createdAt == null ? null : Timestamp.fromDate(createdAt!),
+      'providerId': providerId,
     };
   }
 }

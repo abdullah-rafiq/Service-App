@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 
 import 'package:flutter_application_1/models/app_user.dart';
 import 'package:flutter_application_1/services/user_service.dart';
@@ -58,6 +60,11 @@ class RoleHomePage extends StatelessWidget {
           );
         }
 
+        // Automatically attempt to fetch and save user location and city/town
+        // once after login, without showing any UI. If the user denies
+        // permission or location services are off, this silently does nothing.
+        Future.microtask(() => _ensureUserLocationAndAddress(profile));
+
         switch (profile.role) {
           case UserRole.customer:
             return const MainPage();
@@ -68,5 +75,83 @@ class RoleHomePage extends StatelessWidget {
         }
       },
     );
+  }
+}
+
+Future<void> _ensureUserLocationAndAddress(AppUser profile) async {
+  try {
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return;
+    }
+
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      return;
+    }
+
+    // If we already have location and basic address info, don't do anything.
+    if (profile.locationLat != null &&
+        profile.locationLng != null &&
+        profile.city != null &&
+        profile.town != null) {
+      return;
+    }
+
+    final position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+
+    String? city;
+    String? town;
+
+    try {
+      final placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        final p = placemarks.first;
+
+        city = p.locality ?? p.subAdministrativeArea ?? p.administrativeArea;
+        town = p.subLocality ?? p.locality;
+
+        final lowerCity = city?.toLowerCase() ?? '';
+        if (lowerCity.contains('lahore')) {
+          city = 'Lahore';
+        } else if (lowerCity.contains('islamabad')) {
+          city = 'Islamabad';
+        } else if (lowerCity.contains('karachi')) {
+          city = 'Karachi';
+        }
+      }
+    } catch (_) {
+      // Ignore reverse geocoding errors; location is still useful.
+    }
+
+    final update = <String, dynamic>{
+      'locationLat': position.latitude,
+      'locationLng': position.longitude,
+    };
+
+    if (city != null && city.isNotEmpty) {
+      update['city'] = city;
+    }
+
+    if (town != null && town.isNotEmpty) {
+      update['town'] = town;
+    }
+
+    if (update.isNotEmpty) {
+      await UserService.instance.updateUser(profile.id, update);
+    }
+  } catch (_) {
+    // Silently ignore failures for auto location.
   }
 }

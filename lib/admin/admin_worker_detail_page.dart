@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -16,34 +18,34 @@ class AdminWorkerDetailPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(worker.name?.isNotEmpty == true ? worker.name! : 'Worker details'),
       ),
-      backgroundColor: const Color(0xFFF6FBFF),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildHeaderCard(),
+            _buildHeaderCard(context),
             const SizedBox(height: 16),
-            _buildEarningsSection(),
+            _buildEarningsSection(context),
             const SizedBox(height: 16),
-            _buildReviewsSection(),
+            _buildReviewsSection(context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeaderCard() {
+  Widget _buildHeaderCard(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x14000000),
+            color: Theme.of(context).shadowColor.withOpacity(0.08),
             blurRadius: 12,
-            offset: Offset(0, 8),
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -60,7 +62,7 @@ class AdminWorkerDetailPage extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'ID: ${worker.id}',
-            style: const TextStyle(fontSize: 12, color: Colors.black54),
+            style: const TextStyle(fontSize: 12),
           ),
           const SizedBox(height: 4),
           if (worker.phone != null)
@@ -83,7 +85,7 @@ class AdminWorkerDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildEarningsSection() {
+  Widget _buildEarningsSection(BuildContext context) {
     final bookingsQuery = FirebaseFirestore.instance
         .collection('bookings')
         .where('providerId', isEqualTo: worker.id)
@@ -98,6 +100,7 @@ class AdminWorkerDetailPage extends StatelessWidget {
 
         if (snapshot.hasError) {
           return _sectionCard(
+            context,
             title: 'Earnings',
             child: Text('Error loading earnings: ${snapshot.error}'),
           );
@@ -114,6 +117,7 @@ class AdminWorkerDetailPage extends StatelessWidget {
         );
 
         return _sectionCard(
+          context,
           title: 'Earnings',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,7 +134,7 @@ class AdminWorkerDetailPage extends StatelessWidget {
                 bookings.isEmpty
                     ? 'No completed jobs yet.'
                     : 'Based on ${bookings.length} completed job(s).',
-                style: const TextStyle(fontSize: 13, color: Colors.black54),
+                style: const TextStyle(fontSize: 13),
               ),
             ],
           ),
@@ -139,7 +143,7 @@ class AdminWorkerDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildReviewsSection() {
+  Widget _buildReviewsSection(BuildContext context) {
     final reviewsQuery = FirebaseFirestore.instance
         .collection('reviews')
         .where('providerId', isEqualTo: worker.id)
@@ -154,6 +158,7 @@ class AdminWorkerDetailPage extends StatelessWidget {
 
         if (snapshot.hasError) {
           return _sectionCard(
+            context,
             title: 'Customer reviews',
             child: Text('Error loading reviews: ${snapshot.error}'),
           );
@@ -163,6 +168,7 @@ class AdminWorkerDetailPage extends StatelessWidget {
 
         if (docs.isEmpty) {
           return _sectionCard(
+            context,
             title: 'Customer reviews',
             child: const Text('No reviews yet.'),
           );
@@ -178,6 +184,7 @@ class AdminWorkerDetailPage extends StatelessWidget {
                 reviews.length;
 
         return _sectionCard(
+          context,
           title: 'Customer reviews',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -196,7 +203,7 @@ class AdminWorkerDetailPage extends StatelessWidget {
                   const SizedBox(width: 4),
                   Text(
                     '(${reviews.length} review(s))',
-                    style: const TextStyle(fontSize: 12, color: Colors.black54),
+                    style: const TextStyle(fontSize: 12),
                   ),
                 ],
               ),
@@ -211,13 +218,15 @@ class AdminWorkerDetailPage extends StatelessWidget {
                   return Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(12),
-                      boxShadow: const [
+                      boxShadow: [
                         BoxShadow(
-                          color: Color(0x11000000),
+                          color: Theme.of(context)
+                              .shadowColor
+                              .withOpacity(0.07),
                           blurRadius: 6,
-                          offset: Offset(0, 3),
+                          offset: const Offset(0, 3),
                         ),
                       ],
                     ),
@@ -248,7 +257,6 @@ class AdminWorkerDetailPage extends StatelessWidget {
                           'Booking: ${r.bookingId}',
                           style: const TextStyle(
                             fontSize: 11,
-                            color: Colors.black54,
                           ),
                         ),
                       ],
@@ -263,7 +271,8 @@ class AdminWorkerDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _sectionCard({required String title, required Widget child}) {
+  Widget _sectionCard(BuildContext context,
+      {required String title, required Widget child}) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(

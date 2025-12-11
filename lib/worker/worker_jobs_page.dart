@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -41,7 +43,7 @@ class _WorkerJobsPageState extends State<WorkerJobsPage> {
         ),
         title: const Text('My jobs'),
       ),
-      backgroundColor: const Color(0xFFF6FBFF),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: StreamBuilder<List<BookingModel>>(
         stream: BookingService.instance.watchProviderBookings(
           user.uid,
@@ -53,16 +55,26 @@ class _WorkerJobsPageState extends State<WorkerJobsPage> {
           }
 
           if (snapshot.hasError) {
-            return const Center(
-              child: Text('Could not load jobs.'),
+            return Center(
+              child: Text(
+                'Could not load jobs.',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                ),
+              ),
             );
           }
 
           final bookings = snapshot.data ?? [];
 
           if (bookings.isEmpty) {
-            return const Center(
-              child: Text('No jobs assigned yet.'),
+            return Center(
+              child: Text(
+                'No jobs assigned yet.',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                ),
+              ),
             );
           }
 
@@ -112,13 +124,15 @@ class _WorkerJobsPageState extends State<WorkerJobsPage> {
                     return Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(16),
-                        boxShadow: const [
+                        boxShadow: [
                           BoxShadow(
-                            color: Color(0x14000000),
+                            color: Theme.of(context)
+                                .shadowColor
+                                .withOpacity(0.08),
                             blurRadius: 8,
-                            offset: Offset(0, 4),
+                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
@@ -177,7 +191,6 @@ class _WorkerJobsPageState extends State<WorkerJobsPage> {
                                             overflow: TextOverflow.ellipsis,
                                             style: const TextStyle(
                                               fontSize: 12,
-                                              color: Colors.black54,
                                             ),
                                           ),
                                           const SizedBox(height: 4),
@@ -187,7 +200,6 @@ class _WorkerJobsPageState extends State<WorkerJobsPage> {
                                                 : 'Time: ${_formatDateTime(b.scheduledTime)}',
                                             style: const TextStyle(
                                               fontSize: 12,
-                                              color: Colors.black54,
                                             ),
                                           ),
                                           if (b.address != null &&
@@ -200,7 +212,6 @@ class _WorkerJobsPageState extends State<WorkerJobsPage> {
                                                   TextOverflow.ellipsis,
                                               style: const TextStyle(
                                                 fontSize: 12,
-                                                color: Colors.black54,
                                               ),
                                             ),
                                           ],

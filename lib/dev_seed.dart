@@ -5,6 +5,7 @@ Future<void> seedDemoData() async {
 
   WriteBatch batch = db.batch();
 
+  // USERS
   final userCustomer1 = db.collection('users').doc('user_customer_1');
   batch.set(userCustomer1, {
     'name': 'Ali Customer',
@@ -19,6 +20,7 @@ Future<void> seedDemoData() async {
     'lastSeen': Timestamp.fromDate(DateTime(2024, 11, 25, 14)),
   });
 
+  // Approved provider (visible in workers list, not pending)
   final userProvider1 = db.collection('users').doc('user_provider_1');
   batch.set(userProvider1, {
     'name': 'Sara Provider',
@@ -31,20 +33,41 @@ Future<void> seedDemoData() async {
     'walletBalance': 0,
     'createdAt': Timestamp.fromDate(DateTime(2024, 11, 2, 10)),
     'lastSeen': Timestamp.fromDate(DateTime(2024, 11, 25, 13, 30)),
+    'verificationStatus': 'approved',
+    'verificationReason': null,
   });
 
-  final catHomeCleaning = db.collection('categories').doc('home_cleaning');
-  batch.set(catHomeCleaning, {
-    'name': 'Home Cleaning',
-    'iconUrl': null,
-    'isActive': true,
+  // Pending provider (for AdminPendingWorkersPage)
+  final userProviderPending =
+      db.collection('users').doc('user_provider_pending_1');
+  batch.set(userProviderPending, {
+    'name': 'Pending Provider',
+    'phone': '+92...123',
+    'email': 'pending.provider@example.com',
+    'role': 'provider',
+    'status': 'Active',
+    'profileImageUrl': null,
+    'verified': false,
+    'walletBalance': 0,
+    'createdAt': Timestamp.fromDate(DateTime(2024, 11, 3, 9)),
+    'lastSeen': Timestamp.fromDate(DateTime(2024, 11, 25, 12)),
+    'verificationStatus': 'pending',
+    'verificationReason': null,
   });
 
-  final catAcServices = db.collection('categories').doc('ac_services');
-  batch.set(catAcServices, {
-    'name': 'AC Services',
-    'iconUrl': null,
-    'isActive': true,
+  // Admin user (for admin pages)
+  final userAdmin1 = db.collection('users').doc('user_admin_1');
+  batch.set(userAdmin1, {
+    'name': 'Admin User',
+    'phone': '+92...999',
+    'email': 'admin@example.com',
+    'role': 'admin',
+    'status': 'Active',
+    'profileImageUrl': null,
+    'verified': true,
+    'walletBalance': 0,
+    'createdAt': Timestamp.fromDate(DateTime(2024, 10, 20, 10)),
+    'lastSeen': Timestamp.fromDate(DateTime(2024, 11, 25, 15)),
   });
 
   final serviceDeepCleaning =
@@ -192,6 +215,31 @@ Future<void> seedDemoData() async {
     'userId': 'user_customer_1',
     'role': 'customer',
     'createdAt': Timestamp.fromDate(DateTime(2024, 11, 1, 10)),
+  });
+
+  // CHAT + MESSAGES (for chat/messages/worker badge)
+  final chat1 = db.collection('chats').doc('chat_customer_provider1');
+  batch.set(chat1, {
+    'participants': ['user_customer_1', 'user_provider_1'],
+    'lastMessage': 'Hello, I would like to confirm my booking.',
+    'lastMessageSenderId': 'user_customer_1',
+    'updatedAt': Timestamp.fromDate(DateTime(2024, 11, 25, 16)),
+  });
+
+  final chat1Msg1 =
+      chat1.collection('messages').doc('msg_1');
+  batch.set(chat1Msg1, {
+    'senderId': 'user_customer_1',
+    'text': 'Hello, I would like to confirm my booking.',
+    'timestamp': Timestamp.fromDate(DateTime(2024, 11, 25, 15, 50)),
+  });
+
+  final chat1Msg2 =
+      chat1.collection('messages').doc('msg_2');
+  batch.set(chat1Msg2, {
+    'senderId': 'user_provider_1',
+    'text': 'Sure, I will be there on time.',
+    'timestamp': Timestamp.fromDate(DateTime(2024, 11, 25, 15, 55)),
   });
 
   await batch.commit();

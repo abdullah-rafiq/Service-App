@@ -24,7 +24,7 @@ class _AdminMainPageState extends State<AdminMainPage> {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6FBFF),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: IndexedStack(
         index: _currentIndex,
         children: pages,

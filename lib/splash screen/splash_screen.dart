@@ -18,7 +18,7 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
 
     // Short delay then decide where to go based on auth + role
-    Timer(const Duration(seconds: 0), () async {
+    Timer(const Duration(seconds: 1), () async {
       if (!mounted) return;
 
       final auth = FirebaseAuth.instance;
@@ -54,6 +54,7 @@ class _SplashScreenState extends State<SplashScreen> {
           context.go('/worker');
           break;
         case UserRole.admin:
+        // ignore: unreachable_switch_default
         default:
           if (!mounted) return;
           context.go('/auth');

@@ -31,7 +31,7 @@ class _WorkerMainPageState extends State<WorkerMainPage> {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6FBFF),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: IndexedStack(
         index: _currentIndex,
         children: pages,

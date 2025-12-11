@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +10,45 @@ import 'chat_page.dart';
 
 class MessagesPage extends StatelessWidget {
   const MessagesPage({super.key});
+
+  Widget _buildEmptyState(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.chat_bubble_outline,
+              size: 48,
+              color: theme.colorScheme.primary.withOpacity(0.8),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'No conversations yet',
+              style: theme.textTheme.titleMedium?.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ) ??
+                  const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Your chats with providers will appear here once you start messaging.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,17 +78,13 @@ class MessagesPage extends StatelessWidget {
           }
 
           if (snapshot.hasError) {
-            return const Center(
-              child: Text('Could not load messages.'),
-            );
+            return _buildEmptyState(context);
           }
 
           final docs = snapshot.data?.docs ?? [];
 
           if (docs.isEmpty) {
-            return const Center(
-              child: Text('No conversations yet.'),
-            );
+            return _buildEmptyState(context);
           }
 
           return ListView.separated(

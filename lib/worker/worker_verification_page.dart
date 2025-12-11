@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -15,12 +17,22 @@ class WorkerVerificationPage extends StatefulWidget {
 }
 
 class _WorkerVerificationPageState extends State<WorkerVerificationPage> {
+  // ignore: unused_field
   bool _submitting = false;
-  String? _cnicUrl;
+  String? _cnicFrontUrl;
+  String? _cnicBackUrl;
   String? _selfieUrl;
   String? _shopUrl;
 
   final ImagePicker _picker = ImagePicker();
+
+  final PageController _pageController = PageController();
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   Future<void> _pickAndUpload(String field) async {
     final user = FirebaseAuth.instance.currentUser;
@@ -50,8 +62,10 @@ class _WorkerVerificationPageState extends State<WorkerVerificationPage> {
       });
 
       setState(() {
-        if (field == 'cnicImageUrl') {
-          _cnicUrl = url;
+        if (field == 'cnicFrontImageUrl') {
+          _cnicFrontUrl = url;
+        } else if (field == 'cnicBackImageUrl') {
+          _cnicBackUrl = url;
         } else if (field == 'selfieImageUrl') {
           _selfieUrl = url;
         } else if (field == 'shopImageUrl') {
@@ -60,6 +74,29 @@ class _WorkerVerificationPageState extends State<WorkerVerificationPage> {
       });
 
       if (mounted) {
+        if (field == 'cnicFrontImageUrl') {
+          _pageController.animateToPage(
+            1,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+          );
+        } else if (field == 'cnicBackImageUrl') {
+          _pageController.animateToPage(
+            2,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+          );
+        } else if (field == 'selfieImageUrl') {
+          _pageController.animateToPage(
+            3,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+          );
+        } else if (field == 'shopImageUrl') {
+          // Last step completed: auto-submit verification
+          _submitVerification();
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Image uploaded successfully.')),
         );
@@ -82,10 +119,15 @@ class _WorkerVerificationPageState extends State<WorkerVerificationPage> {
       return;
     }
 
-    if (_cnicUrl == null || _selfieUrl == null || _shopUrl == null) {
+    if (_cnicFrontUrl == null ||
+        _cnicBackUrl == null ||
+        _selfieUrl == null ||
+        _shopUrl == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please upload CNIC, selfie, and shop/tools photos first.'),
+          content: Text(
+            'Please upload CNIC front & back pictures, live picture, and shop/tools pictures first.',
+          ),
         ),
       );
       return;
@@ -125,51 +167,124 @@ class _WorkerVerificationPageState extends State<WorkerVerificationPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final bool isDark = theme.brightness == Brightness.dark;
+    // ignore: unused_local_variable
+    final Color titleColor =
+        isDark ? Colors.white : theme.colorScheme.onSurface;
+    // ignore: unused_local_variable
+    final Color descColor = isDark
+        ? Colors.white70
+        : theme.colorScheme.onSurface.withOpacity(0.7);
+    const totalSteps = 4;
+    final completedSteps =
+        (_cnicFrontUrl != null ? 1 : 0) +
+        (_cnicBackUrl != null ? 1 : 0) +
+        (_selfieUrl != null ? 1 : 0) +
+        (_shopUrl != null ? 1 : 0);
+    final progress = completedSteps / totalSteps;
+    final currentStep =
+        completedSteps < totalSteps ? completedSteps + 1 : totalSteps;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Worker verification'),
       ),
-      backgroundColor: const Color(0xFFF6FBFF),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            Text(
               'To start taking jobs, please upload the following live photos:',
-              style: TextStyle(fontSize: 14),
+              style: TextStyle(
+                fontSize: 14,
+                color: theme.colorScheme.onSurface,
+              ),
             ),
             const SizedBox(height: 12),
-            _VerificationTile(
-              title: 'CNIC photo',
-              description: 'Take a clear photo of your CNIC.',
-              uploaded: _cnicUrl != null,
-              onTap: () => _pickAndUpload('cnicImageUrl'),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.shadowColor.withOpacity(0.08),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Step $currentStep of $totalSteps',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  LinearProgressIndicator(value: progress),
+                ],
+              ),
             ),
-            const SizedBox(height: 12),
-            _VerificationTile(
-              title: 'Live selfie',
-              description: 'Take a live selfie matching your CNIC.',
-              uploaded: _selfieUrl != null,
-              onTap: () => _pickAndUpload('selfieImageUrl'),
-            ),
-            const SizedBox(height: 12),
-            _VerificationTile(
-              title: 'Shop / tools photo',
-              description: 'Take a photo of your shop or tools.',
-              uploaded: _shopUrl != null,
-              onTap: () => _pickAndUpload('shopImageUrl'),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _submitting ? null : _submitVerification,
-              child: _submitting
-                  ? const SizedBox(
-                      height: 18,
-                      width: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Submit verification'),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 210,
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: (index) {
+                  // Prevent swiping ahead of the current completed step.
+                  int maxStep = 0;
+                  if (_cnicFrontUrl != null) maxStep = 1;
+                  if (_cnicBackUrl != null) maxStep = 2;
+                  if (_selfieUrl != null) maxStep = 3;
+
+                  if (index > maxStep) {
+                    _pageController.animateToPage(
+                      maxStep,
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOut,
+                    );
+                  }
+                },
+                children: [
+                  _VerificationTile(
+                    title: 'CNIC front picture',
+                    description: 'Take a clear picture of the front of your CNIC.',
+                    uploaded: _cnicFrontUrl != null,
+                    onTap: () => _pickAndUpload('cnicFrontImageUrl'),
+                  ),
+                  _VerificationTile(
+                    title: 'CNIC back picture',
+                    description:
+                        'Take a clear picture of the back side of your CNIC.',
+                    uploaded: _cnicBackUrl != null,
+                    enabled: _cnicFrontUrl != null,
+                    onTap: () => _pickAndUpload('cnicBackImageUrl'),
+                  ),
+                  _VerificationTile(
+                    title: 'Live picture',
+                    description: 'Take a live picture of yourself matching your CNIC.',
+                    uploaded: _selfieUrl != null,
+                    enabled:
+                        _cnicFrontUrl != null && _cnicBackUrl != null,
+                    onTap: () => _pickAndUpload('selfieImageUrl'),
+                  ),
+                  _VerificationTile(
+                    title: 'Shop / tools picture',
+                    description: 'Take a picture of your shop or tools.',
+                    uploaded: _shopUrl != null,
+                    enabled: _selfieUrl != null,
+                    onTap: () => _pickAndUpload('shopImageUrl'),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -182,6 +297,7 @@ class _VerificationTile extends StatelessWidget {
   final String title;
   final String description;
   final bool uploaded;
+  final bool enabled;
   final VoidCallback onTap;
 
   const _VerificationTile({
@@ -189,20 +305,28 @@ class _VerificationTile extends StatelessWidget {
     required this.description,
     required this.uploaded,
     required this.onTap,
+    this.enabled = true,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final bool isDark = theme.brightness == Brightness.dark;
+    final Color titleColor =
+        isDark ? Colors.white : theme.colorScheme.onSurface;
+    final Color descColor = isDark
+        ? Colors.white70
+        : theme.colorScheme.onSurface.withOpacity(0.7);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(14),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x14000000),
+            color: theme.shadowColor.withOpacity(0.08),
             blurRadius: 8,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -220,21 +344,25 @@ class _VerificationTile extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
+                    color: titleColor,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   description,
-                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: descColor,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Align(
                   alignment: Alignment.centerLeft,
                   child: TextButton(
-                    onPressed: onTap,
+                    onPressed: enabled ? onTap : null,
                     child: Text(uploaded ? 'Retake photo' : 'Take photo'),
                   ),
                 ),

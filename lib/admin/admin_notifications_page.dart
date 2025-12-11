@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -8,12 +10,9 @@ class AdminNotificationsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF29B6F6),
-        foregroundColor: Colors.white,
-        elevation: 4,
         title: const Text('Notifications'),
       ),
-      backgroundColor: const Color(0xFFF6FBFF),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance
             .collection('admin_notifications')
@@ -74,13 +73,15 @@ class AdminNotificationsPage extends StatelessWidget {
               return Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(14),
-                  boxShadow: const [
+                  boxShadow: [
                     BoxShadow(
-                      color: Color(0x11000000),
+                      color: Theme.of(context)
+                          .shadowColor
+                          .withOpacity(0.08),
                       blurRadius: 8,
-                      offset: Offset(0, 4),
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
@@ -106,7 +107,6 @@ class AdminNotificationsPage extends StatelessWidget {
                               subtitle,
                               style: const TextStyle(
                                 fontSize: 12,
-                                color: Colors.black54,
                               ),
                             ),
                           ],
@@ -114,9 +114,12 @@ class AdminNotificationsPage extends StatelessWidget {
                             const SizedBox(height: 4),
                             Text(
                               timeText,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
-                                color: Colors.black45,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.6),
                               ),
                             ),
                           ],

@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -29,7 +31,7 @@ class WorkerEarningsPage extends StatelessWidget {
         ),
         title: const Text('Earnings'),
       ),
-      backgroundColor: const Color(0xFFF6FBFF),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: StreamBuilder<List<BookingModel>>(
         stream: BookingService.instance.watchProviderBookings(
           user.uid,
@@ -60,13 +62,14 @@ class WorkerEarningsPage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(18),
-                    boxShadow: const [
+                    boxShadow: [
                       BoxShadow(
-                        color: Color(0x14000000),
+                        color:
+                            Theme.of(context).shadowColor.withOpacity(0.08),
                         blurRadius: 12,
-                        offset: Offset(0, 8),
+                        offset: const Offset(0, 8),
                       ),
                     ],
                   ),
@@ -93,7 +96,7 @@ class WorkerEarningsPage extends StatelessWidget {
                         bookings.isEmpty
                             ? 'No completed jobs yet. Completed jobs will appear here.'
                             : 'Based on ${bookings.length} completed job(s).',
-                        style: const TextStyle(color: Colors.black54),
+                        style: const TextStyle(),
                       ),
                     ],
                   ),
@@ -112,13 +115,15 @@ class WorkerEarningsPage extends StatelessWidget {
                             return Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: Theme.of(context).cardColor,
                                 borderRadius: BorderRadius.circular(14),
-                                boxShadow: const [
+                                boxShadow: [
                                   BoxShadow(
-                                    color: Color(0x11000000),
+                                    color: Theme.of(context)
+                                        .shadowColor
+                                        .withOpacity(0.07),
                                     blurRadius: 8,
-                                    offset: Offset(0, 4),
+                                    offset: const Offset(0, 4),
                                   ),
                                 ],
                               ),
@@ -139,7 +144,6 @@ class WorkerEarningsPage extends StatelessWidget {
                                         _formatDateTime(b.scheduledTime ?? b.createdAt),
                                         style: const TextStyle(
                                           fontSize: 12,
-                                          color: Colors.black54,
                                         ),
                                       ),
                                     ],

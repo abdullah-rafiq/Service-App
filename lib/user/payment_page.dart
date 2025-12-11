@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/models/booking.dart';
 import 'package:flutter_application_1/services/booking_service.dart';
@@ -34,20 +36,20 @@ class PaymentPage extends StatelessWidget {
         ),
         title: const Text('Payment'),
       ),
-      backgroundColor: const Color(0xFFF6FBFF),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(18),
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
-                  color: Color(0x14000000),
+                  color: Theme.of(context).shadowColor.withOpacity(0.08),
                   blurRadius: 12,
-                  offset: Offset(0, 8),
+                  offset: const Offset(0, 8),
                 ),
               ],
             ),
@@ -114,10 +116,15 @@ class PaymentPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
-            'Note: This is a demo payment screen. Connect these methods to real '
-            'payment gateways for production use.',
-            style: TextStyle(fontSize: 13, color: Colors.black54),
+          Text(
+            'Note: This is a demo payment screen. Connect these methods to real payment gateways for production use.',
+            style: TextStyle(
+              fontSize: 13,
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withOpacity(0.7),
+            ),
           ),
         ],
       ),
