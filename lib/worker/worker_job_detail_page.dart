@@ -17,6 +17,9 @@ class WorkerJobDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final onSurface = theme.colorScheme.onSurface;
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -27,7 +30,7 @@ class WorkerJobDetailPage extends StatelessWidget {
         ),
         title: const Text('Job details'),
       ),
-      backgroundColor: const Color(0xFFF6FBFF),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -36,13 +39,13 @@ class WorkerJobDetailPage extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(18),
-                boxShadow: const [
+                boxShadow: [
                   BoxShadow(
-                    color: Color(0x14000000),
+                    color: theme.shadowColor.withOpacity(0.08),
                     blurRadius: 12,
-                    offset: Offset(0, 8),
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
@@ -78,17 +81,17 @@ class WorkerJobDetailPage extends StatelessWidget {
                               const SizedBox(height: 2),
                               Row(
                                 children: [
-                                  const Icon(
+                                  Icon(
                                     Icons.phone_outlined,
                                     size: 16,
-                                    color: Colors.black54,
+                                    color: onSurface.withOpacity(0.7),
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
                                     phone,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 13,
-                                      color: Colors.black54,
+                                      color: onSurface.withOpacity(0.7),
                                     ),
                                   ),
                                 ],
@@ -135,10 +138,10 @@ class WorkerJobDetailPage extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.calendar_today_outlined,
                         size: 18,
-                        color: Colors.black54,
+                        color: onSurface.withOpacity(0.7),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -155,10 +158,10 @@ class WorkerJobDetailPage extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.place_outlined,
                         size: 18,
-                        color: Colors.black54,
+                        color: onSurface.withOpacity(0.7),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -174,10 +177,10 @@ class WorkerJobDetailPage extends StatelessWidget {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.attach_money,
                         size: 18,
-                        color: Colors.black54,
+                        color: onSurface.withOpacity(0.7),
                       ),
                       const SizedBox(width: 8),
                       Text(
@@ -192,17 +195,18 @@ class WorkerJobDetailPage extends StatelessWidget {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                    const Icon(
-                      Icons.payment_outlined,
-                      size: 18,
-                      color: Colors.black54,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Payment: ${booking.paymentStatus}',
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ],),
+                      Icon(
+                        Icons.payment_outlined,
+                        size: 18,
+                        color: onSurface.withOpacity(0.7),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Payment: ${booking.paymentStatus}',
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ],
+                  ),
                   if (booking.notes != null && booking.notes!.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     const Text(

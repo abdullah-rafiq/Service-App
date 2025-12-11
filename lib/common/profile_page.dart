@@ -37,8 +37,8 @@ class ProfilePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
-        child: StreamBuilder<AppUser?>(
-          stream: UserService.instance.watchUser(current.uid),
+        child: FutureBuilder<AppUser?>(
+          future: UserService.instance.getById(current.uid),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
@@ -133,61 +133,62 @@ class ProfilePage extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 2),
-                          InkWell(
-                            borderRadius: BorderRadius.circular(12),
-                            onTap: profile.verified
-                                ? null
-                                : () {
-                                    if (profile.role == UserRole.provider) {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) =>
-                                              const WorkerVerificationPage(),
-                                        ),
-                                      );
-                                    } else {
-                                      _startPhoneVerification(
-                                        context,
-                                        profile,
-                                      );
-                                    }
-                                  },
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  profile.verified
-                                      ? Icons.verified
-                                      : Icons.error_outline,
-                                  size: 16,
-                                  color: profile.verified
-                                      ? Colors.green
-                                      : Colors.red,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  profile.verified
-                                      ? 'Verified account'
-                                      : 'Not verified (tap to verify)',
-                                  style: TextStyle(
-                                    fontSize: 13,
+                          if (profile.role != UserRole.admin) ...[
+                            InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: profile.verified
+                                  ? null
+                                  : () {
+                                      if (profile.role == UserRole.provider) {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (_) =>
+                                                const WorkerVerificationPage(),
+                                          ),
+                                        );
+                                      } else {
+                                        _startPhoneVerification(
+                                          context,
+                                          profile,
+                                        );
+                                      }
+                                    },
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    profile.verified
+                                        ? Icons.verified
+                                        : Icons.error_outline,
+                                    size: 16,
                                     color: profile.verified
                                         ? Colors.green
                                         : Colors.red,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    profile.verified
+                                        ? 'Verified account'
+                                        : 'Not verified (tap to verify)',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: profile.verified
+                                          ? Colors.green
+                                          : Colors.red,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          if (profile.role != UserRole.admin)
+                            const SizedBox(height: 4),
                             Text(
                               'Wallet: PKR ${profile.walletBalance.toStringAsFixed(0)}',
                               style: const TextStyle(
                                 fontSize: 13,
                               ),
                             ),
+                          ],
                         ],
                       ],
                     ),
@@ -251,7 +252,7 @@ class ProfilePage extends StatelessWidget {
                       ),
                     ),
                   const SizedBox(height: 16),
-                  if (profile != null) ...[
+                  if (profile != null && profile.role != UserRole.admin) ...[
                     ListTile(
                       title: const Text('Edit profile'),
                       subtitle: Text(
@@ -284,30 +285,32 @@ class ProfilePage extends StatelessWidget {
                     },
                   ),
                   const Divider(),
-                  ListTile(
-                    title: const Text('Help & Support'),
-                    subtitle: const Text('Help center and legal support'),
-                    leading: Image.asset('assets/icons/support.png',cacheWidth: 125,  
-                      cacheHeight: 125,),
-                    trailing:
-                        const Icon(Icons.chevron_right, color: accentBlue),
-                    onTap: () {
-                      context.push('/contact');
-                    },
-                  ),
-                  const Divider(),
-                  ListTile(
-                    title: const Text('FAQ'),
-                    subtitle: const Text('Questions and Answers'),
-                    leading: Image.asset('assets/icons/faq.png',cacheWidth: 125,  
-                      cacheHeight: 125,),
-                    trailing:
-                        const Icon(Icons.chevron_right, color: accentBlue),
-                    onTap: () {
-                      context.push('/faq');
-                    },
-                  ),
-                  const Divider(),
+                  if (profile == null || profile.role != UserRole.admin) ...[
+                    ListTile(
+                      title: const Text('Help & Support'),
+                      subtitle: const Text('Help center and legal support'),
+                      leading: Image.asset('assets/icons/support.png',cacheWidth: 125,  
+                        cacheHeight: 125,),
+                      trailing:
+                          const Icon(Icons.chevron_right, color: accentBlue),
+                      onTap: () {
+                        context.push('/contact');
+                      },
+                    ),
+                    const Divider(),
+                    ListTile(
+                      title: const Text('FAQ'),
+                      subtitle: const Text('Questions and Answers'),
+                      leading: Image.asset('assets/icons/faq.png',cacheWidth: 125,  
+                        cacheHeight: 125,),
+                      trailing:
+                          const Icon(Icons.chevron_right, color: accentBlue),
+                      onTap: () {
+                        context.push('/faq');
+                      },
+                    ),
+                    const Divider(),
+                  ],
                   ListTile(
                     title: const Text('Logout'),
                     subtitle: const Text('Sign out from this account'),

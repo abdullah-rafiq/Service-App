@@ -1,7 +1,6 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -174,25 +173,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       await AppLocale.setLocale(newLocale);
                     },
                   );
-                },
-              ),
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(Icons.description_outlined),
-                title: const Text('Terms & conditions'),
-                subtitle:
-                    const Text('View the legal terms of using the app.'),
-                onTap: () {
-                  context.push('/terms');
-                },
-              ),
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(Icons.lock_outline),
-                title: const Text('Privacy policy'),
-                subtitle: const Text('Learn how we handle your data.'),
-                onTap: () {
-                  context.push('/privacy');
                 },
               ),
               const Divider(height: 1),

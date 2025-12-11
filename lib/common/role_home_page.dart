@@ -29,8 +29,8 @@ class RoleHomePage extends StatelessWidget {
       );
     }
 
-    return StreamBuilder<AppUser?>(
-      stream: UserService.instance.watchUser(current.uid),
+    return FutureBuilder<AppUser?>(
+      future: UserService.instance.getById(current.uid),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(

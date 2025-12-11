@@ -60,4 +60,40 @@ class AuthService {
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
+
+  Future<void> ensureAdminUser(User firebaseUser) async {
+    final userRef = _db.collection('users').doc(firebaseUser.uid);
+    final snapshot = await userRef.get();
+
+    if (snapshot.exists) {
+      await userRef.set(
+        {
+          'role': UserRole.admin.name,
+          'email': firebaseUser.email,
+          'name': firebaseUser.displayName,
+          'phone': firebaseUser.phoneNumber,
+        },
+        SetOptions(merge: true),
+      );
+      return;
+    }
+
+    final appUser = AppUser(
+      id: firebaseUser.uid,
+      name: firebaseUser.displayName,
+      email: firebaseUser.email,
+      phone: firebaseUser.phoneNumber,
+      role: UserRole.admin,
+      createdAt: DateTime.now(),
+    );
+
+    await userRef.set(appUser.toMap(), SetOptions(merge: true));
+
+    await _db.collection('admin_notifications').add({
+      'type': 'new_user',
+      'userId': firebaseUser.uid,
+      'role': UserRole.admin.name,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
 }

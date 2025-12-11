@@ -201,6 +201,7 @@ class _WorkerVerificationBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final current = FirebaseAuth.instance.currentUser;
+
     if (current == null) {
       return const SizedBox.shrink();
     }
@@ -213,40 +214,54 @@ class _WorkerVerificationBanner extends StatelessWidget {
           return const SizedBox.shrink();
         }
 
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
+        final Color bgColor =
+            isDark ? theme.colorScheme.surfaceVariant : const Color(0xFFFFF3E0);
+        final Color iconColor =
+            isDark ? Colors.amberAccent : const Color(0xFFF57C00);
+        final Color titleColor =
+            isDark ? Colors.white : const Color(0xFFBF360C);
+        final Color descColor =
+            isDark ? Colors.white70 : Colors.black87;
+
         return Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: const Color(0xFFFFF3E0),
+            color: bgColor,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(
+              Icon(
                 Icons.info_outline,
-                color: Color(0xFFF57C00),
+                color: iconColor,
               ),
+
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Complete verification to take jobs',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFFBF360C),
+                        color: titleColor,
                       ),
                     ),
+
                     const SizedBox(height: 4),
-                    const Text(
+                    Text(
                       'Verify your account (phone / details) so you can start accepting and completing jobs.',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.black87,
+                        color: descColor,
                       ),
                     ),
+
                     const SizedBox(height: 8),
                     Align(
                       alignment: Alignment.centerLeft,

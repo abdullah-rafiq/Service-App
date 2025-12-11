@@ -14,13 +14,23 @@ class AppBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
+    final Color selectedColor =
+        isDark ? Colors.white : colorScheme.primary;
+    // ignore: deprecated_member_use
+    final Color unselectedColor = isDark
+        ? Colors.white70
+        : colorScheme.onSurface.withOpacity(0.6);
+
     return BottomNavigationBar(
       currentIndex: currentIndex,
       type: BottomNavigationBarType.fixed,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      selectedItemColor: Theme.of(context).colorScheme.primary,
+      backgroundColor: colorScheme.surface,
+      selectedItemColor: selectedColor,
       // ignore: deprecated_member_use
-      unselectedItemColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+      unselectedItemColor: unselectedColor,
       onTap: onTap,
       items: items,
     );

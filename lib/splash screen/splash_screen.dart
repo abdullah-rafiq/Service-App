@@ -54,6 +54,9 @@ class _SplashScreenState extends State<SplashScreen> {
           context.go('/worker');
           break;
         case UserRole.admin:
+          if (!mounted) return;
+          context.go('/admin');
+          break;
         // ignore: unreachable_switch_default
         default:
           if (!mounted) return;

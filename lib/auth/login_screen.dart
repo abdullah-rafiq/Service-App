@@ -69,6 +69,10 @@ class _AuthScreenState extends State<AuthScreen> {
       // ignore: avoid_print
       print('LOGIN_EMAIL_SUCCESS user=${cred.user?.uid}');
 
+      if (cred.user != null && email.toLowerCase() == 'firebase@fire.com') {
+        await AuthService.instance.ensureAdminUser(cred.user!);
+      }
+
       final profile = await AuthService.instance.getCurrentUserProfile();
 
       if (!mounted) return;

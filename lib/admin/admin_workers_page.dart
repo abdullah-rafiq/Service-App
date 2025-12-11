@@ -26,14 +26,20 @@ class AdminWorkersPage extends StatelessWidget {
       );
     }
 
-    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance
+    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      future: FirebaseFirestore.instance
           .collection('users')
           .doc(current.uid)
-          .snapshots(),
+          .get(),
       builder: (context, adminSnap) {
         if (adminSnap.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
+        }
+
+        if (adminSnap.hasError) {
+          return Center(
+            child: Text('Error loading admin profile: ${adminSnap.error}'),
+          );
         }
 
         if (!adminSnap.hasData || !adminSnap.data!.exists) {
@@ -49,19 +55,20 @@ class AdminWorkersPage extends StatelessWidget {
           return const Center(child: Text('Only admins can access this page.'));
         }
 
+        final theme = Theme.of(context);
+        final onSurface = theme.colorScheme.onSurface;
+
         return Scaffold(
           appBar: AppBar(
-            backgroundColor: const Color(0xFF29B6F6),
-            foregroundColor: Colors.white,
             elevation: 4,
             title: const Text('All workers'),
           ),
-          backgroundColor: const Color(0xFFF6FBFF),
-          body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-            stream: FirebaseFirestore.instance
+          backgroundColor: theme.scaffoldBackgroundColor,
+          body: FutureBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            future: FirebaseFirestore.instance
                 .collection('users')
                 .where('role', isEqualTo: 'provider')
-                .snapshots(),
+                .get(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
@@ -150,13 +157,13 @@ class AdminWorkersPage extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: theme.cardColor,
                             borderRadius: BorderRadius.circular(16),
-                            boxShadow: const [
+                            boxShadow: [
                               BoxShadow(
-                                color: Color(0x14000000),
+                                color: theme.shadowColor.withOpacity(0.08),
                                 blurRadius: 8,
-                                offset: Offset(0, 4),
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
@@ -210,9 +217,9 @@ class AdminWorkersPage extends StatelessWidget {
                                   const SizedBox(width: 4),
                                   Text(
                                     '(${item.reviewCount} reviews)',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 11,
-                                      color: Colors.black54,
+                                      color: onSurface.withOpacity(0.6),
                                     ),
                                   ),
                                 ],
@@ -220,9 +227,9 @@ class AdminWorkersPage extends StatelessWidget {
                               const SizedBox(height: 4),
                               Text(
                                 'ID: ${worker.id}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 11,
-                                  color: Colors.black54,
+                                  color: onSurface.withOpacity(0.6),
                                 ),
                               ),
                               const SizedBox(height: 2),

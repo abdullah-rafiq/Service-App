@@ -13,11 +13,11 @@ class AdminNotificationsPage extends StatelessWidget {
         title: const Text('Notifications'),
       ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: FirebaseFirestore.instance
+      body: FutureBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        future: FirebaseFirestore.instance
             .collection('admin_notifications')
             .orderBy('createdAt', descending: true)
-            .snapshots(),
+            .get(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
