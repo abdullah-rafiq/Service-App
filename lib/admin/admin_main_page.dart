@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'admin_workers_page.dart';
 import 'admin_notifications_page.dart';
+import 'admin_analytics_page.dart';
 import 'package:flutter_application_1/common/profile_page.dart';
 import 'package:flutter_application_1/common/app_bottom_nav.dart';
 
@@ -18,6 +19,7 @@ class _AdminMainPageState extends State<AdminMainPage> {
   @override
   Widget build(BuildContext context) {
     final pages = <Widget>[
+      const AdminAnalyticsPage(),
       const AdminWorkersPage(),
       const AdminNotificationsPage(),
       const ProfilePage(),
@@ -37,6 +39,10 @@ class _AdminMainPageState extends State<AdminMainPage> {
           });
         },
         items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.insights_outlined),
+            label: 'Analytics',
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.group_outlined),
             label: 'Workers',
