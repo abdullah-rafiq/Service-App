@@ -1,13 +1,11 @@
 // ignore_for_file: deprecated_member_use
 
-import 'dart:io';
-
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:flutter_application_1/services/user_service.dart';
+import 'package:flutter_application_1/services/cloudinary_service.dart';
 
 class WorkerVerificationPage extends StatefulWidget {
   const WorkerVerificationPage({super.key});
@@ -46,19 +44,21 @@ class _WorkerVerificationPageState extends State<WorkerVerificationPage> {
     try {
       final picked = await _picker.pickImage(source: ImageSource.camera);
       if (picked == null) return;
+      final bytes = await picked.readAsBytes();
+      final fileName = picked.name;
 
-      final file = File(picked.path);
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child('worker_verification')
-          .child(user.uid)
-          .child('$field.jpg');
-
-      await storageRef.putFile(file);
-      final url = await storageRef.getDownloadURL();
+      // Upload via Cloudinary and store URL/publicId in the corresponding user fields.
+      final result = await CloudinaryService.instance.uploadImage(
+        bytes: bytes,
+        folder: 'worker_verification/${user.uid}',
+        publicId: field,
+        fileName: fileName,
+      );
+      final url = result.secureUrl;
 
       await UserService.instance.updateUser(user.uid, {
         field: url,
+        '${field}PublicId': result.publicId,
       });
 
       setState(() {

@@ -1,9 +1,9 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 
 import '../models/app_user.dart';
+import 'cloudinary_service.dart';
 
 class UserService {
   UserService._();
@@ -11,7 +11,6 @@ class UserService {
   static final UserService instance = UserService._();
 
   final FirebaseFirestore _db = FirebaseFirestore.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   CollectionReference<Map<String, dynamic>> get _col =>
       _db.collection('users');
@@ -32,11 +31,15 @@ class UserService {
     });
   }
 
-  Future<String> uploadProfileImage(String uid, File file) async {
-    final ref = _storage.ref().child('user_profile_images').child('$uid.jpg');
-    await ref.putFile(file);
-    final url = await ref.getDownloadURL();
-    return url;
+  Future<CloudinaryUploadResult> uploadProfileImage(
+      String uid, Uint8List bytes, String fileName) async {
+    final result = await CloudinaryService.instance.uploadImage(
+      bytes: bytes,
+      folder: 'user_profile_images',
+      publicId: uid,
+      fileName: fileName,
+    );
+    return result;
   }
 
   Future<void> updateProfileImageUrl(String uid, String url) {

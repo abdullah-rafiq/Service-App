@@ -1,10 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
-import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -967,8 +964,8 @@ Future<void> _changeProfileImage(BuildContext context, String uid) async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
     if (picked == null) return;
-
-    final file = File(picked.path);
+    final bytes = await picked.readAsBytes();
+    final fileName = picked.name;
 
     // Show loading SnackBar
     final loadingSnack = SnackBar(
@@ -983,19 +980,16 @@ Future<void> _changeProfileImage(BuildContext context, String uid) async {
     );
     ScaffoldMessenger.of(context).showSnackBar(loadingSnack);
 
-    // Upload to Firebase Storage
-    final storageRef = FirebaseStorage.instance
-        .ref()
-        .child('profile_images')
-        .child('$uid.jpg');
-
-    // ignore: unused_local_variable
-    final uploadTask = await storageRef.putFile(file);
-    final downloadUrl = await storageRef.getDownloadURL();
-
-    // Update Firestore
-    await FirebaseFirestore.instance.collection('users').doc(uid).update({
-      'profileImageUrl': downloadUrl,
+    // Upload via UserService (Cloudinary under the hood) and update Firestore
+    final uploadResult = await UserService.instance.uploadProfileImage(
+      uid,
+      bytes,
+      fileName,
+    );
+    await UserService.instance.updateProfileImageUrl(uid, uploadResult.secureUrl);
+    // Optionally store Cloudinary public_id for future management
+    await UserService.instance.updateUser(uid, {
+      'profileImagePublicId': uploadResult.publicId,
     });
 
     // Hide loading SnackBar and show success
