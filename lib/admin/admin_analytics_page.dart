@@ -461,7 +461,7 @@ class AdminAnalyticsPage extends StatelessWidget {
       BookingStatus.cancelled,
     ];
 
-    Color _colorForStatus(String status) {
+    Color colorForStatus(String status) {
       switch (status) {
         case BookingStatus.completed:
           return Colors.green;
@@ -511,7 +511,7 @@ class AdminAnalyticsPage extends StatelessWidget {
                     label: status,
                     value: data.bookingsByStatus[status] ?? 0,
                     max: max,
-                    color: _colorForStatus(status),
+                    color: colorForStatus(status),
                   ),
                   const SizedBox(height: 8),
                 ],
@@ -649,7 +649,7 @@ class AdminAnalyticsPage extends StatelessWidget {
 
     const order = <String>['approved', 'pending', 'rejected', 'none'];
 
-    Color _colorForStatus(String status) {
+    Color colorForStatus(String status) {
       switch (status) {
         case 'approved':
           return Colors.green;
@@ -662,7 +662,7 @@ class AdminAnalyticsPage extends StatelessWidget {
       }
     }
 
-    String _labelForStatus(String status) {
+    String labelForStatus(String status) {
       switch (status) {
         case 'approved':
           return 'Approved';
@@ -704,10 +704,10 @@ class AdminAnalyticsPage extends StatelessWidget {
               for (final key in order)
                 if ((data.verificationCounts[key] ?? 0) > 0) ...[
                   _BookingsBar(
-                    label: _labelForStatus(key),
+                    label: labelForStatus(key),
                     value: data.verificationCounts[key] ?? 0,
                     max: maxTotal,
-                    color: _colorForStatus(key),
+                    color: colorForStatus(key),
                   ),
                   const SizedBox(height: 8),
                 ],
