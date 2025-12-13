@@ -14,6 +14,7 @@ import 'package:flutter_application_1/worker/worker_verification_page.dart';
 
 import '../user/wallet_page.dart';
 import '../user/my_bookings_page.dart';
+import '../app_locale.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -34,8 +35,8 @@ class ProfilePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
-        child: FutureBuilder<AppUser?>(
-          future: UserService.instance.getById(current.uid),
+        child: StreamBuilder<AppUser?>(
+          stream: UserService.instance.watchUser(current.uid),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
@@ -316,6 +317,7 @@ class ProfilePage extends StatelessWidget {
                         const Icon(Icons.chevron_right, color: accentBlue),
                     onTap: () async {
                       await FirebaseAuth.instance.signOut();
+                      await AppLocale.setLocale(const Locale('en'));
                       if (context.mounted) {
                         context.go('/auth');
                       }

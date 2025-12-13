@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:flutter_application_1/models/app_user.dart';
 import 'package:flutter_application_1/services/user_service.dart';
+import 'package:flutter_application_1/app_locale.dart';
 
 class AdminProfilePage extends StatelessWidget {
   const AdminProfilePage({super.key});
@@ -126,6 +127,7 @@ class AdminProfilePage extends StatelessWidget {
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () async {
                       await FirebaseAuth.instance.signOut();
+                      await AppLocale.setLocale(const Locale('en'));
                       if (context.mounted) {
                         context.go('/auth');
                       }

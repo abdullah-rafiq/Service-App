@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../theme_mode_notifier.dart';
 import '../app_locale.dart';
+import '../localized_strings.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -68,118 +69,120 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 4,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-        title: const Text('App settings'),
-      ),
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: [
-              BoxShadow(
-                color: Theme.of(context).shadowColor.withOpacity(0.08),
-                blurRadius: 12,
-                offset: const Offset(0, 8),
-              ),
-            ],
+    return ValueListenableBuilder<Locale>(
+      valueListenable: AppLocale.locale,
+      builder: (context, currentLocale, _) {
+        final isUrdu = currentLocale.languageCode == 'ur';
+
+        return Scaffold(
+          appBar: AppBar(
+            elevation: 4,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            title: Text(L10n.settingsTitle()),
           ),
-          child: ListView(
-            shrinkWrap: true,
-            children: [
-              SwitchListTile(
-                title: const Text('Push notifications'),
-                subtitle: const Text(
-                    'Receive updates about your bookings and offers.'),
-                value: _notificationsEnabled,
-                onChanged: _loadingNotifications
-                    ? null
-                    : (value) async {
-                        setState(() {
-                          _notificationsEnabled = value;
-                        });
-
-                        final user = FirebaseAuth.instance.currentUser;
-                        if (user == null) return;
-
-                        try {
-                          await FirebaseFirestore.instance
-                              .collection('users')
-                              .doc(user.uid)
-                              .set(
-                            {
-                              'notificationsEnabled': value,
-                            },
-                            SetOptions(merge: true),
-                          );
-                        } catch (_) {
-                          // Revert on failure
-                          setState(() {
-                            _notificationsEnabled = !value;
-                          });
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Could not update notification preference. Please try again.',
-                                ),
-                              ),
-                            );
-                          }
-                        }
-                      },
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color:
+                        Theme.of(context).shadowColor.withOpacity(0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
-              const Divider(height: 1),
-              ValueListenableBuilder<ThemeMode>(
-                valueListenable: AppTheme.themeMode,
-                builder: (context, themeMode, _) {
-                  final isDark = themeMode == ThemeMode.dark;
-                  return SwitchListTile(
-                    title: const Text('Dark mode'),
-                    subtitle:
-                        const Text('Use a dark theme for the application.'),
-                    value: isDark,
-                    onChanged: (value) {
-                      AppTheme.setThemeMode(
-                        value ? ThemeMode.dark : ThemeMode.light,
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  SwitchListTile(
+                    title: Text(L10n.settingsNotificationsTitle()),
+                    subtitle: Text(L10n.settingsNotificationsSubtitle()),
+                    value: _notificationsEnabled,
+                    onChanged: _loadingNotifications
+                        ? null
+                        : (value) async {
+                            setState(() {
+                              _notificationsEnabled = value;
+                            });
+
+                            final user =
+                                FirebaseAuth.instance.currentUser;
+                            if (user == null) return;
+
+                            try {
+                              await FirebaseFirestore.instance
+                                  .collection('users')
+                                  .doc(user.uid)
+                                  .set(
+                                {
+                                  'notificationsEnabled': value,
+                                },
+                                SetOptions(merge: true),
+                              );
+                            } catch (_) {
+                              // Revert on failure
+                              setState(() {
+                                _notificationsEnabled = !value;
+                              });
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Could not update notification preference. Please try again.',
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                  ),
+                  const Divider(height: 1),
+                  ValueListenableBuilder<ThemeMode>(
+                    valueListenable: AppTheme.themeMode,
+                    builder: (context, themeMode, _) {
+                      final isDark = themeMode == ThemeMode.dark;
+                      return SwitchListTile(
+                        title: Text(L10n.settingsDarkModeTitle()),
+                        subtitle: Text(L10n.settingsDarkModeSubtitle()),
+                        value: isDark,
+                        onChanged: (value) {
+                          AppTheme.setThemeMode(
+                            value ? ThemeMode.dark : ThemeMode.light,
+                          );
+                        },
                       );
                     },
-                  );
-                },
-              ),
-              const Divider(height: 1),
-              ValueListenableBuilder<Locale>(
-                valueListenable: AppLocale.locale,
-                builder: (context, currentLocale, _) {
-                  final isUrdu = currentLocale.languageCode == 'ur';
-                  return ListTile(
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
                     leading: const Icon(Icons.language),
-                    title: const Text('Language'),
-                    subtitle: Text(isUrdu ? 'Urdu' : 'English'),
+                    title: Text(L10n.settingsLanguageTitle()),
+                    subtitle: Text(
+                        isUrdu ? L10n.languageUrdu() : L10n.languageEnglish()),
                     onTap: () async {
                       final newLocale = isUrdu
                           ? const Locale('en')
                           : const Locale('ur');
                       await AppLocale.setLocale(newLocale);
                     },
-                  );
-                },
+                  ),
+                  const Divider(height: 1),
+                ],
               ),
-              const Divider(height: 1),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

@@ -1,5 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -19,6 +21,7 @@ import 'package:flutter_application_1/common/app_bottom_nav.dart';
 import 'package:flutter_application_1/user/top_workers_section.dart';
 import 'package:flutter_application_1/user/featured_providers_section.dart';
 import 'package:flutter_application_1/user/voice_search_card.dart';
+import 'package:flutter_application_1/localized_strings.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -39,11 +42,37 @@ class _MainPageState extends State<MainPage> {
 
   // Speech-to-text
   final PageController _promoController = PageController(viewportFraction: 0.9);
+  Timer? _promoTimer;
+  static const int _promoItemCount = 4;
+
+  @override
+  void initState() {
+    super.initState();
+    _startPromoAutoScroll();
+  }
 
   @override
   void dispose() {
+    _promoTimer?.cancel();
     _promoController.dispose();
     super.dispose();
+  }
+
+  void _startPromoAutoScroll() {
+    _promoTimer?.cancel();
+    _promoTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (!mounted) return;
+      if (!_promoController.hasClients) return;
+
+      final currentPage = _promoController.page?.round() ?? 0;
+      final nextPage = (currentPage + 1) % _promoItemCount;
+
+      _promoController.animateToPage(
+        nextPage,
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeOut,
+      );
+    });
   }
 
   Widget _buildPromoCarousel() {
@@ -578,7 +607,7 @@ class _MainPageState extends State<MainPage> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 18.0, vertical: 8),
                   child: Text(
-                    'Categories',
+                    L10n.homeCategoriesTitle(),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -597,7 +626,7 @@ class _MainPageState extends State<MainPage> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 18.0, vertical: 8),
                   child: Text(
-                    'Featured Providers',
+                    L10n.homeFeaturedProvidersTitle(),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -618,7 +647,7 @@ class _MainPageState extends State<MainPage> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 18.0, vertical: 8),
                   child: Text(
-                    'Upcoming Bookings',
+                    L10n.homeUpcomingBookingsTitle(),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -647,7 +676,7 @@ class _MainPageState extends State<MainPage> {
           foregroundColor:
               Theme.of(context).appBarTheme.foregroundColor,
           elevation: 4,
-          title: const Text('Categories'),
+          title: Text(L10n.homeCategoriesTitle()),
         ),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -666,12 +695,12 @@ class _MainPageState extends State<MainPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Padding(
+                Padding(
                   padding:
-                      EdgeInsets.symmetric(horizontal: 18.0, vertical: 12),
+                      const EdgeInsets.symmetric(horizontal: 18.0, vertical: 12),
                   child: Text(
-                    'All Categories',
-                    style: TextStyle(
+                    L10n.homeAllCategoriesTitle(),
+                    style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.1,
@@ -707,25 +736,25 @@ class _MainPageState extends State<MainPage> {
           });
         },
         items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Home',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.home_outlined),
+            label: L10n.userNavHome(),
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.category_outlined),
-            label: 'Categories',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.category_outlined),
+            label: L10n.userNavCategories(),
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_outlined),
-            label: 'Bookings',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.calendar_today_outlined),
+            label: L10n.userNavBookings(),
           ),
           BottomNavigationBarItem(
             icon: _MessagesIconWithBadge(),
-            label: 'Messages',
+            label: L10n.userNavMessages(),
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Profile',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.person_outline),
+            label: L10n.userNavProfile(),
           ),
         ],
       ),

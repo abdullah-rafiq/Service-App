@@ -124,31 +124,70 @@ class MainApp extends StatelessWidget {
                 GlobalCupertinoLocalizations.delegate,
               ],
               theme: ThemeData(
+                useMaterial3: true,
                 colorScheme: ColorScheme.fromSeed(
-                  seedColor: Colors.blue,
+                  seedColor: const Color(0xFF29B6F6),
                   brightness: Brightness.light,
                 ),
-                scaffoldBackgroundColor: const Color(0xFFF6FBFF),
+                scaffoldBackgroundColor: const Color(0xFFF4F7FB),
                 appBarTheme: const AppBarTheme(
-                  elevation: 4,
-                  backgroundColor: Color(0xFF29B6F6),
-                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  backgroundColor: Colors.transparent,
+                  foregroundColor: Colors.black87,
+                  centerTitle: false,
                 ),
                 cardColor: Colors.white,
+                cardTheme: CardThemeData(
+                  color: Colors.white,
+                  elevation: 1,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+                  elevation: 0,
+                  type: BottomNavigationBarType.fixed,
+                  selectedLabelStyle: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  unselectedLabelStyle: TextStyle(
+                    fontSize: 11,
+                  ),
+                ),
               ),
               darkTheme: ThemeData(
+                useMaterial3: true,
                 colorScheme: ColorScheme.fromSeed(
-                  seedColor: Colors.blue,
+                  seedColor: const Color(0xFF29B6F6),
                   brightness: Brightness.dark,
                 ),
-                scaffoldBackgroundColor: const Color(0xFF121212),
-                appBarTheme: AppBarTheme(
-                  elevation: 4,
-                  backgroundColor:
-                      ColorScheme.fromSeed(seedColor: Colors.blue, brightness: Brightness.dark).primary,
+                scaffoldBackgroundColor: const Color(0xFF0F1115),
+                appBarTheme: const AppBarTheme(
+                  elevation: 0,
+                  backgroundColor: Colors.transparent,
                   foregroundColor: Colors.white,
+                  centerTitle: false,
                 ),
                 cardColor: const Color(0xFF1E1E1E),
+                cardTheme: CardThemeData(
+                  color: const Color(0xFF1E1E1E),
+                  elevation: 1,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+                  elevation: 0,
+                  type: BottomNavigationBarType.fixed,
+                  selectedLabelStyle: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  unselectedLabelStyle: TextStyle(
+                    fontSize: 11,
+                  ),
+                ),
               ),
               routerConfig: _router,
             );
